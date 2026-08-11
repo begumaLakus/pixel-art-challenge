@@ -14,8 +14,7 @@ import { registerUser } from '../services/authServices';
 export const RegisterScreen = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [confirmPassword, setConfirmPassword] =
-    useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleRegister = async (): Promise<void> => {
@@ -31,15 +30,10 @@ export const RegisterScreen = () => {
 
     try {
       setLoading(true);
-
       await registerUser(email.trim(), password);
-
       Alert.alert('Başarılı', 'Hesabınız oluşturuldu.');
     } catch {
-      Alert.alert(
-        'Kayıt başarısız',
-        'Hesap oluşturulurken bir hata oluştu.',
-      );
+      Alert.alert('Kayıt başarısız', 'Hesap oluşturulurken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
@@ -52,6 +46,7 @@ export const RegisterScreen = () => {
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor="#888"
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -61,6 +56,7 @@ export const RegisterScreen = () => {
       <TextInput
         style={styles.input}
         placeholder="Şifre"
+        placeholderTextColor="#888"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -69,6 +65,7 @@ export const RegisterScreen = () => {
       <TextInput
         style={styles.input}
         placeholder="Şifre tekrar"
+        placeholderTextColor="#888"
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry
@@ -85,9 +82,7 @@ export const RegisterScreen = () => {
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.push('/auth/login')}>
-        <Text style={styles.link}>
-          Zaten hesabın var mı? Giriş yap
-        </Text>
+        <Text style={styles.link}>Zaten hesabın var mı? Giriş yap</Text>
       </TouchableOpacity>
     </View>
   );
@@ -98,11 +93,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 24,
+    backgroundColor: '#fff',
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
     marginBottom: 24,
+    color: '#000',
   },
   input: {
     borderWidth: 1,
@@ -110,6 +107,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
+    color: '#000',
+    backgroundColor: '#fff',
   },
   button: {
     backgroundColor: '#000',
@@ -125,5 +124,6 @@ const styles = StyleSheet.create({
   link: {
     textAlign: 'center',
     marginTop: 20,
+    color: '#000',
   },
 });

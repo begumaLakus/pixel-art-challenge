@@ -1,13 +1,22 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
 import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { logoutUser } from '@/src/features/auth/services/authServices';
+import { Image } from 'expo-image';
+import { Link, router } from 'expo-router';
+import { Alert, Button, Platform, StyleSheet } from 'react-native';
 
 export default function HomeScreen() {
+  const handleLogout = async (): Promise<void> => {
+    try {
+      await logoutUser();
+      router.replace('/auth/login' as any); // Çıkış yaptıktan sonra login ekranına yönlendirir
+    } catch {
+      Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu.');
+    }
+  };
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -21,6 +30,12 @@ export default function HomeScreen() {
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
       </ThemedView>
+
+      {/* Çıkış Yap Butonu */}
+      <ThemedView style={styles.stepContainer}>
+        <Button title="Çıkış Yap" onPress={handleLogout} color="#8A2BE2" />
+      </ThemedView>
+
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>
@@ -36,6 +51,7 @@ export default function HomeScreen() {
           to open developer tools.
         </ThemedText>
       </ThemedView>
+
       <ThemedView style={styles.stepContainer}>
         <Link href="/modal">
           <Link.Trigger>
@@ -64,6 +80,7 @@ export default function HomeScreen() {
           {`Tap the Explore tab to learn more about what's included in this starter app.`}
         </ThemedText>
       </ThemedView>
+
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
         <ThemedText>

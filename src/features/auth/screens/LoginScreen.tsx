@@ -6,17 +6,12 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  useColorScheme,
   View,
 } from 'react-native';
 
-import { AntiqueColors } from '@/constants/theme';
 import { loginUser } from '../services/authServices';
 
 export const LoginScreen = () => {
-  const colorScheme = useColorScheme();
-  const theme = AntiqueColors[colorScheme === 'dark' ? 'dark' : 'light'];
-
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -38,22 +33,13 @@ export const LoginScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <Text style={[styles.title, { color: theme.text, borderColor: theme.brass }]}>
-        Giriş Yap
-      </Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Giriş Yap</Text>
 
       <TextInput
-        style={[
-          styles.input,
-          {
-            color: theme.text,
-            borderColor: theme.border,
-            backgroundColor: theme.surface,
-          },
-        ]}
+        style={styles.input}
         placeholder="Email"
-        placeholderTextColor={theme.placeholder}
+        placeholderTextColor="#888"
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -62,35 +48,26 @@ export const LoginScreen = () => {
       />
 
       <TextInput
-        style={[
-          styles.input,
-          {
-            color: theme.text,
-            borderColor: theme.border,
-            backgroundColor: theme.surface,
-          },
-        ]}
+        style={styles.input}
         placeholder="Şifre"
-        placeholderTextColor={theme.placeholder}
+        placeholderTextColor="#888"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
 
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: theme.accent, borderColor: theme.brass }]}
+        style={styles.button}
         onPress={handleLogin}
         disabled={loading}
       >
-        <Text style={[styles.buttonText, { color: theme.buttonText }]}>
+        <Text style={styles.buttonText}>
           {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.push('/auth/register')}>
-        <Text style={[styles.link, { color: theme.brass }]}>
-          Hesabın yok mu? Kayıt ol
-        </Text>
+        <Text style={styles.link}>Hesabın yok mu? Kayıt ol</Text>
       </TouchableOpacity>
     </View>
   );
@@ -101,35 +78,37 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 24,
+    backgroundColor: '#fff',
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
     marginBottom: 24,
-    borderBottomWidth: 2,
-    paddingBottom: 8,
-    alignSelf: 'flex-start',
+    color: '#000',
   },
   input: {
-    borderWidth: 2,
-    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
     padding: 12,
     marginBottom: 12,
+    color: '#000',
+    backgroundColor: '#fff',
   },
   button: {
-    borderWidth: 2,
+    backgroundColor: '#000',
     padding: 14,
-    borderRadius: 4,
+    borderRadius: 8,
     alignItems: 'center',
     marginTop: 8,
   },
   buttonText: {
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    color: '#fff',
+    fontWeight: '600',
   },
   link: {
     textAlign: 'center',
     marginTop: 20,
-    fontWeight: '600',
+    color: '#000',
   },
 });

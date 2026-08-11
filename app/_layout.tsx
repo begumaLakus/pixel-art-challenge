@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
 
-import { AntiqueColors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/src/features/auth/hooks/useAuth';
 
@@ -17,8 +16,6 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = AntiqueColors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   useEffect(() => {
     if (loading) return;
@@ -34,15 +31,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: theme.background,
-        }}
-      >
-        <ActivityIndicator size="large" color={theme.accent} />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <ActivityIndicator size="large" color="#000" />
       </View>
     );
   }
