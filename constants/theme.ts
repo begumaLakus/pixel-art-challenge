@@ -1,41 +1,65 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const tintColorLight = '#5C4033'; // Sıcak Ahşap Kahvesi
+const tintColorDark = '#E6D7C3';  // Açık Kum Beji
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
+    text: '#2C1D11',
+    background: '#F5EBE0',
     tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    icon: '#8A735C',
+    tabIconDefault: '#8A735C',
     tabIconSelected: tintColorLight,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: '#F5EBE0',
+    background: '#3A2A1D',
     tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    icon: '#B5A28A',
+    tabIconDefault: '#B5A28A',
     tabIconSelected: tintColorDark,
+  },
+};
+
+// Soft Antika / Kum Beji & Ahşap Paleti
+export const AntiqueColors = {
+  light: {
+    background: '#F5EBE0',      // Soft Kum Beji / Sıcak Açık Parşömen
+    surface: '#E8D8C8',         // Bir tık koyu kum beji (Input & Kart zemini)
+    surfaceLight: '#FFFBF5',    // Çok açık krem (Input içi / vurgulu kartlar)
+    text: '#2C1D11',            // Koyu Ceviz / Mürekkep Kahvesi (Okunaklı ve soft)
+    textMuted: '#6E5A47',       // Derin Sepia (İkincil metinler)
+    placeholder: '#9E8A75',     // Yumuşak Toprak/Sepia (Input placeholder)
+    border: '#C4B098',          // Soft Ahşap / Eskitilmiş Bej Çerçeve
+    borderDark: '#5C4033',      // Koyu Ahşap Çerçeve (Vurgulu sınırlar için)
+    accent: '#4A3525',          // Koyu Ahşap / Meşe (Buton zeminleri - Kırmızı kaldırıldı)
+    accentHover: '#3A2A1D',     // Koyu Ceviz
+    brass: '#C5A059',           // Yumuşak Pirinç / Antik Altın
+    buttonText: '#F5EBE0',      // Buton içi Açık Kum Beji Yazı
+  },
+  dark: {
+    // Koyu mod açılsa dahi siyah/koyu kahveye düşmeyen soft gece sepia tonu
+    background: '#4A3525',      // Sıcak Koyu Meşe
+    surface: '#3A2A1D',         // Koyu Ceviz Panel
+    surfaceLight: '#5C4033',    
+    text: '#F5EBE0',            // Kum Beji Yazı
+    textMuted: '#C4B098',
+    placeholder: '#8A7355',
+    border: '#6E5A47',
+    borderDark: '#C5A059',
+    accent: '#8A735C',          // Açık Ahşap / Taba
+    accentHover: '#6E5A47',
+    brass: '#D4B06A',
+    buttonText: '#2C1D11',
   },
 };
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
