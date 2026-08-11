@@ -1,7 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
-  Alert,
   StyleSheet,
   Text,
   TextInput,
@@ -15,18 +14,21 @@ export const LoginScreen = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (): Promise<void> => {
     if (!email.trim() || !password) {
-      Alert.alert('Hata', 'Email ve şifre alanlarını doldurun.');
+      setError('Email ve şifre alanlarını doldurun.');
       return;
     }
 
     try {
       setLoading(true);
+      setError(null);
+
       await loginUser(email.trim(), password);
     } catch {
-      Alert.alert('Giriş başarısız', 'Email veya şifre hatalı.');
+      setError('Email veya şifre hatalı.');
     } finally {
       setLoading(false);
     }
@@ -41,7 +43,10 @@ export const LoginScreen = () => {
         placeholder="Email"
         placeholderTextColor="#888"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(value: string) => {
+          setEmail(value);
+          setError(null);
+        }}
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="email-address"
@@ -52,12 +57,21 @@ export const LoginScreen = () => {
         placeholder="Şifre"
         placeholderTextColor="#888"
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(value: string) => {
+          setPassword(value);
+          setError(null);
+        }}
         secureTextEntry
       />
 
+      {error !== null && (
+        <Text style={styles.errorText}>
+          {error}
+        </Text>
+      )}
+
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, loading && styles.disabledButton]}
         onPress={handleLogin}
         disabled={loading}
       >
@@ -67,7 +81,9 @@ export const LoginScreen = () => {
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.push('/auth/register')}>
-        <Text style={styles.link}>Hesabın yok mu? Kayıt ol</Text>
+        <Text style={styles.link}>
+          Hesabın yok mu? Kayıt ol
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -95,12 +111,20 @@ const styles = StyleSheet.create({
     color: '#000',
     backgroundColor: '#fff',
   },
+  errorText: {
+    color: '#B00020',
+    marginBottom: 12,
+    fontWeight: '600',
+  },
   button: {
     backgroundColor: '#000',
     padding: 14,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 8,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   buttonText: {
     color: '#fff',
