@@ -25,6 +25,7 @@ export const Colors = {
 export const AntiqueColors = {
   light: {
     background: '#FDFBF7',
+    surface: '#FFFFFF',
     text: '#2C2A29',
     accent: '#8B5A2B',
     brass: '#B58840',
@@ -32,6 +33,7 @@ export const AntiqueColors = {
   },
   dark: {
     background: '#181615',
+    surface: '#292622',
     text: '#E8E3D9',
     accent: '#D2B48C',
     brass: '#D4AF37',

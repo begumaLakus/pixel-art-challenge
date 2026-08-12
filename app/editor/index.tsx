@@ -1,5 +1,11 @@
+import { useLocalSearchParams } from 'expo-router';
+
 import { PixelEditorScreen } from '@/src/features/editor/screens/PixelEditorScreen';
 
 export default function EditorRoute() {
-  return <PixelEditorScreen />;
+  const { challengeId } = useLocalSearchParams<{
+    challengeId: string;
+  }>();
+
+  return <PixelEditorScreen challengeId={challengeId} />;
 }

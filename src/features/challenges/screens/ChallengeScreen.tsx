@@ -65,7 +65,14 @@ export const ChallengeScreen = () => {
 
       {/* Pixel Art Oluştur Butonu Doğru Yerde */}
       <Pressable
-        onPress={() => router.push('/editor' as any)}
+
+        onPress={() =>
+          router.push({
+            pathname: '/editor',
+            params: {
+              challengeId: challenge.id,
+            },
+          })}
         style={({ pressed }) => [
           styles.button,
           { backgroundColor: theme.accent, opacity: pressed ? 0.8 : 1 },
@@ -73,6 +80,28 @@ export const ChallengeScreen = () => {
       >
         <Text style={styles.buttonText}>Pixel Art Oluştur</Text>
       </Pressable>
+
+      <Pressable
+  onPress={() =>
+    router.push({
+      pathname: '/submissions',
+      params: {
+        challengeId: challenge.id,
+      },
+    })
+  }
+  style={({ pressed }) => [
+    styles.button,
+    {
+      backgroundColor: theme.brass,
+      opacity: pressed ? 0.8 : 1,
+      marginTop: 12,
+    },
+  ]}
+>
+  <Text style={styles.buttonText}> Galeriyi Gör</Text>
+</Pressable>
+
     </View>
   );
 };
