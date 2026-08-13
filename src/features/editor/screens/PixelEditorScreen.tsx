@@ -10,10 +10,8 @@ import {
 
 import { AntiqueColors } from '@/constants/theme';
 
-import { PixelGrid } from '../components/PixelGrid';
-
-
 import { createSubmission } from '../../submission/services/submissionService';
+import { PixelGrid } from '../components/PixelGrid';
 
 import {
   usePixelEditor,
@@ -25,19 +23,21 @@ interface PixelEditorScreenProps {
 }
 
 const PALETTE = [
-  '#FDFBF7',
-  '#81C784',
-  '#E57373',
-  '#64B5F6',
-  '#3E2723',
-  '#FFD54F',
-  '#9575CD',
+  '#FFFDFC', // parlak kırık beyaz
+  '#F2C1CF', // pastel pembe
+  '#D99AAE', // toz pembe
+  '#C7E6D8', // açık su yeşili
+  '#8FC8B5', // su yeşili
+  '#A9D8C5', // yumuşak yeşil
+  '#B8CFC6', // gri-yeşil
+  '#6F8179', // koyu yeşil-gri
 ];
 
 export const PixelEditorScreen = ({
   challengeId,
 }: PixelEditorScreenProps) => {
   const colorScheme = useColorScheme();
+
   const theme =
     AntiqueColors[colorScheme === 'dark' ? 'dark' : 'light'];
 
@@ -93,10 +93,19 @@ export const PixelEditorScreen = ({
     <View
       style={[
         styles.container,
-        { backgroundColor: theme.background },
+        {
+          backgroundColor: theme.background,
+        },
       ]}
     >
-      <Text style={[styles.title, { color: theme.text }]}>
+      <Text
+        style={[
+          styles.title,
+          {
+            color: theme.text,
+          },
+        ]}
+      >
         Pixel Editor
       </Text>
 
@@ -106,30 +115,38 @@ export const PixelEditorScreen = ({
         onPixelPress={paintPixel}
       />
 
+      {/* Color Palette */}
       <View style={styles.palette}>
-        {PALETTE.map((color) => (
-          <Pressable
-            key={color}
-            onPress={() => setSelectedColor(color)}
-            style={[
-              styles.color,
-              {
-                backgroundColor: color,
-                borderColor:
-                  selectedColor === color
-                    ? theme.brass
-                    : theme.placeholder,
-              },
-            ]}
-          />
-        ))}
+        {PALETTE.map((color) => {
+          const isSelected = selectedColor === color;
+
+          return (
+            <Pressable
+              key={color}
+              onPress={() => setSelectedColor(color)}
+              style={[
+                styles.color,
+                {
+                  backgroundColor: color,
+                  borderColor: isSelected
+                    ? theme.accent
+                    : theme.border,
+                  borderWidth: isSelected ? 3 : 1,
+                },
+              ]}
+            />
+          );
+        })}
       </View>
 
+      {/* Resolution */}
       <View style={styles.resolutionContainer}>
         <Text
           style={[
             styles.sectionLabel,
-            { color: theme.text },
+            {
+              color: theme.text,
+            },
           ]}
         >
           Çözünürlük
@@ -142,15 +159,19 @@ export const PixelEditorScreen = ({
             <Pressable
               key={size}
               onPress={() =>
-                handleResolutionChange(size as PixelResolution)
+                handleResolutionChange(
+                  size as PixelResolution,
+                )
               }
               style={[
                 styles.resolutionButton,
                 {
                   backgroundColor: isSelected
                     ? theme.brass
-                    : theme.background,
-                  borderColor: theme.placeholder,
+                    : theme.surface,
+                  borderColor: isSelected
+                    ? theme.brass
+                    : theme.border,
                 },
               ]}
             >
@@ -159,6 +180,7 @@ export const PixelEditorScreen = ({
                   color: isSelected
                     ? theme.background
                     : theme.text,
+                  fontWeight: isSelected ? '600' : '400',
                 }}
               >
                 {size}×{size}
@@ -168,16 +190,24 @@ export const PixelEditorScreen = ({
         })}
       </View>
 
+      {/* Actions */}
       <View style={styles.actions}>
         <Pressable
           style={[
             styles.resetButton,
-            { borderColor: theme.placeholder },
+            {
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            },
           ]}
           onPress={resetPixels}
           disabled={isSubmitting}
         >
-          <Text style={{ color: theme.text }}>
+          <Text
+            style={{
+              color: theme.text,
+            }}
+          >
             Temizle
           </Text>
         </Pressable>
@@ -196,10 +226,14 @@ export const PixelEditorScreen = ({
           <Text
             style={[
               styles.submitButtonText,
-              { color: theme.background },
+              {
+                color: '#FFFDFC',
+              },
             ]}
           >
-            {isSubmitting ? 'Gönderiliyor...' : 'Gönder'}
+            {isSubmitting
+              ? 'Gönderiliyor...'
+              : 'Gönder'}
           </Text>
         </Pressable>
       </View>
@@ -233,7 +267,6 @@ const styles = StyleSheet.create({
   color: {
     width: 38,
     height: 38,
-    borderWidth: 3,
     borderRadius: 8,
   },
 

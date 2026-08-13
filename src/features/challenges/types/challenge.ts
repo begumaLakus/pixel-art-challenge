@@ -8,7 +8,7 @@ export interface Challenge {
   description: string;
   theme: string;
   startAt: Timestamp;
-  endsAt: Timestamp;
+  endAt: Timestamp;
   status: ChallengeStatus;
   winnerSubmissionId: string | null;
   createdAt: Timestamp;

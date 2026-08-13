@@ -1,63 +1,29 @@
-import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
-export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
-};
-
 export const AntiqueColors = {
   light: {
-    background: '#FDFBF7',
-    surface: '#FFFFFF',
-    text: '#2C2A29',
-    accent: '#8B5A2B',
-    brass: '#B58840',
-    placeholder: '#8C857B',
+    background: '#F9F8F5',
+    surface: '#FFFDFC',
+
+    text: '#35443D',
+    placeholder: '#8A9891',
+    border: '#DDE8E2',
+
+    accent: '#D99AAE',      // toz pembe
+    brass: '#8FC8B5',       // su yeşili
+    success: '#8FC8B5',
+    danger: '#D98F9F',
   },
+
   dark: {
-    background: '#181615',
-    surface: '#292622',
-    text: '#E8E3D9',
-    accent: '#D2B48C',
-    brass: '#D4AF37',
-    placeholder: '#7A7368',
+    background: '#1D2522',
+    surface: '#26302C',
+
+    text: '#F7F6F2',
+    placeholder: '#A8B7B0',
+    border: '#40504A',
+
+    accent: '#D99AAE',      // toz pembe
+    brass: '#8FC8B5',       // su yeşili
+    success: '#8FC8B5',
+    danger: '#D98F9F',
   },
 };
-
-export const Fonts = Platform.select({
-  ios: {
-    sans: 'system-ui',
-    serif: 'ui-serif',
-    rounded: 'ui-rounded',
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});

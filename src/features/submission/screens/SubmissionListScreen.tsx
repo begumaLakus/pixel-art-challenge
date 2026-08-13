@@ -1,13 +1,13 @@
-import {
-    ActivityIndicator,
-    FlatList,
-    StyleSheet,
-    Text,
-    View,
-    useColorScheme,
-} from 'react-native';
-
 import { AntiqueColors } from '@/constants/theme';
+import React from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
+} from 'react-native';
 
 import { SubmissionCard } from '../components/SubmissionCard';
 import { useSubmissions } from '../hooks/useSubmission';
@@ -20,41 +20,30 @@ export const SubmissionListScreen = ({
   challengeId,
 }: SubmissionListScreenProps) => {
   const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const baseTheme = AntiqueColors[isDark ? 'dark' : 'light'];
 
-  const theme =
-    AntiqueColors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = {
+    ...baseTheme,
+    pinkAccent: '#E0809D',
+    cardBg: isDark ? '#1A1625' : '#FFFFFF',
+    cardBorder: isDark ? '#2D223B' : '#F0E6ED',
+  };
 
-  const {
-    submissions,
-    loading,
-    error,
-  } = useSubmissions(challengeId);
+  const { submissions, loading, error } = useSubmissions(challengeId);
 
   if (loading) {
     return (
-      <View
-        style={[
-          styles.center,
-          { backgroundColor: theme.background },
-        ]}
-      >
-        <ActivityIndicator
-          size="large"
-          color={theme.accent}
-        />
+      <View style={[styles.center, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.pinkAccent} />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View
-        style={[
-          styles.center,
-          { backgroundColor: theme.background },
-        ]}
-      >
-        <Text style={{ color: theme.text }}>
+      <View style={[styles.center, { backgroundColor: theme.background }]}>
+        <Text style={[styles.message, { color: theme.pinkAccent }]}>
           {error}
         </Text>
       </View>
@@ -62,56 +51,78 @@ export const SubmissionListScreen = ({
   }
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: theme.background },
-      ]}
-    >
-      <Text
-        style={[
-          styles.title,
-          { color: theme.text },
-        ]}
-      >
-        Pixel Art Çalışmaları
-      </Text>
+    <View style={[styles.mainWrapper, { backgroundColor: theme.background }]}>
+      {/* ARKA PLAN AMBİYANS IŞIKLARI */}
+      <View
+        style={[styles.glowTopRight, { backgroundColor: theme.pinkAccent }]}
+      />
+      <View style={styles.glowBottomLeft} />
 
-      {submissions.length === 0 ? (
-        <View style={styles.center}>
-          <Text style={{ color: theme.text }}>
-            Henüz gönderilmiş bir çalışma yok.
+      <View style={styles.container}>
+        {/* HEADER SECTION */}
+        <View style={styles.header}>
+          <View style={styles.headerTopRow}>
+            <View style={styles.galleryBadge}>
+              <Text style={styles.galleryBadgeText}>🖼️ TOPLULUK GALERİSİ</Text>
+            </View>
+
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>
+                {submissions.length} Çizim
+              </Text>
+            </View>
+          </View>
+
+          <Text style={[styles.title, { color: theme.text }]}>
+            Pixel Art <Text style={{ color: theme.pinkAccent }}>Sergisi</Text>
           </Text>
         </View>
-      ) : (
-        <FlatList
-          data={submissions}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <SubmissionCard submission={item} />
-          )}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+
+        {/* LİSTE VEYA BOŞ DURUM */}
+        {submissions.length === 0 ? (
+          <View
+            style={[
+              styles.emptyContainer,
+              {
+                backgroundColor: theme.cardBg,
+                borderColor: theme.cardBorder,
+              },
+            ]}
+          >
+            <Text style={styles.emptyIcon}>🎨</Text>
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>
+              Henüz Çizim Yok
+            </Text>
+            <Text
+              style={[styles.emptyMessage, { color: theme.placeholder }]}
+            >
+              Bu challenge için ilk piksel sanatı eserini sen oluştur ve sergile!
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={submissions}
+            keyExtractor={(item) => item.id}
+            numColumns={2} // Yan yana 2 sütunlu izgara görünümü
+            columnWrapperStyle={styles.columnWrapper}
+            renderItem={({ item }) => (
+              <View style={styles.cardWrapper}>
+                <SubmissionCard submission={item} />
+              </View>
+            )}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  mainWrapper: {
     flex: 1,
-    padding: 24,
-  },
-
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 20,
-  },
-
-  list: {
-    paddingBottom: 24,
+    position: 'relative',
   },
 
   center: {
@@ -119,5 +130,125 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+  },
+
+  /* Glow Efektleri */
+  glowTopRight: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    opacity: 0.15,
+  },
+
+  glowBottomLeft: {
+    position: 'absolute',
+    bottom: -60,
+    left: -60,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: '#7B2CBF',
+    opacity: 0.12,
+  },
+
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 20,
+  },
+
+  header: {
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+
+  galleryBadge: {
+    backgroundColor: 'rgba(224, 128, 157, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(224, 128, 157, 0.3)',
+  },
+
+  galleryBadgeText: {
+    color: '#E0809D',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+
+  countBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+
+  countBadgeText: {
+    color: '#FFB703',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  title: {
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+
+  list: {
+    paddingBottom: 24,
+  },
+
+  columnWrapper: {
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+
+  cardWrapper: {
+    width: '48.5%', // 2 sütunlu simetrik yerleşim
+  },
+
+  /* Empty State Styles */
+  emptyContainer: {
+    padding: 30,
+    borderWidth: 2,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 40,
+  },
+
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+
+  emptyMessage: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+
+  message: {
+    fontSize: 15,
+    textAlign: 'center',
   },
 });

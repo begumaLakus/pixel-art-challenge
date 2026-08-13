@@ -1,9 +1,10 @@
 import { AntiqueColors } from '@/constants/theme';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -12,163 +13,207 @@ import {
 
 import { useActiveChallenge } from '../hooks/useActiveChallenge';
 
+// Tema koduna göre dinamik emoji/figör ve renk eşleştirmesi
+const THEME_ASSETS: Record<string, { icon: string; label: string; accentColor: string }> = {
+  uzay_macerasi: { icon: '🚀', label: 'UZAY', accentColor: '#FF7AC6' },
+  cilgin_canlilar: { icon: '🐱', label: 'CANLILAR', accentColor: '#FF922B' },
+  masalsi_doga: { icon: '🍄', label: 'DOĞA', accentColor: '#51CF66' },
+  gece_acikmalari: { icon: '🍕', label: 'YEMEK', accentColor: '#FFD43B' },
+  buyulu_dunyam: { icon: '🧙‍♂️', label: 'BÜYÜ', accentColor: '#CC5DE8' },
+  nostalji_atari: { icon: '🕹️', label: 'ATARİ', accentColor: '#FF6B6B' },
+  gelecegin_sehri: { icon: '🤖', label: 'CYBER', accentColor: '#339AF0' },
+  derin_okyanus: { icon: '🐙', label: 'OKYANUS', accentColor: '#22B8CF' },
+  sevimli_canavarlar: { icon: '👾', label: 'CANAVAR', accentColor: '#F06595' },
+  cilgin_araclar: { icon: '🏎️', label: 'ARAÇ', accentColor: '#FCC419' },
+  perili_gece: { icon: '👻', label: 'PERİLİ', accentColor: '#845EF7' },
+  sira_disi_meslekler: { icon: '👨‍🔬', label: 'MESLEK', accentColor: '#20C997' },
+};
+
 export const ChallengeScreen = () => {
   const { challenge, loading, error } = useActiveChallenge();
 
   const colorScheme = useColorScheme();
-  const theme = AntiqueColors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const isDark = colorScheme === 'dark';
+  const baseTheme = AntiqueColors[isDark ? 'dark' : 'light'];
+
+  // Pembe ağırlıklı retro renk paleti
+  const theme = {
+    ...baseTheme,
+    pinkAccent: '#E0809D', // Senin tatlı pembe buton tonun
+    pinkGlow: 'rgba(224, 128, 157, 0.18)',
+    purpleGlow: 'rgba(123, 44, 191, 0.2)',
+    cardBg: isDark ? '#1A1625' : '#FFFFFF',
+    cardBorder: isDark ? '#2D223B' : '#F0E6ED',
+  };
 
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
   useEffect(() => {
-    if (!challenge?.endAt) {
-      return;
-    }
+    if (!challenge?.endAt) return;
 
     const calculateTimeLeft = () => {
       const endTime = challenge.endAt.toDate().getTime();
       const remaining = Math.max(0, endTime - Date.now());
-
       setTimeLeft(remaining);
     };
 
     calculateTimeLeft();
-
     const interval = setInterval(calculateTimeLeft, 1000);
-
     return () => clearInterval(interval);
   }, [challenge]);
 
   const formatTimeLeft = (milliseconds: number): string => {
     const totalSeconds = Math.floor(milliseconds / 1000);
-
     const days = Math.floor(totalSeconds / 86400);
     const hours = Math.floor((totalSeconds % 86400) / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
-    if (days > 0) {
-      return `${days} gün ${hours} saat kaldı`;
-    }
-
-    if (hours > 0) {
-      return `${hours} saat ${minutes} dakika kaldı`;
-    }
-
-    if (minutes > 0) {
-      return `${minutes} dakika ${seconds} saniye kaldı`;
-    }
-
-    return `${seconds} saniye kaldı`;
+    if (days > 0) return `${days} gün ${hours}s kaldı`;
+    if (hours > 0) return `${hours}sa ${minutes}dk kaldı`;
+    if (minutes > 0) return `${minutes}dk ${seconds}sn kaldı`;
+    return `${seconds}sn kaldı`;
   };
 
   if (loading) {
     return (
       <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <ActivityIndicator size="large" color={theme.accent} />
+        <ActivityIndicator size="large" color={theme.pinkAccent} />
       </View>
     );
   }
 
-  if (error) {
+  if (error || !challenge) {
     return (
       <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <Text style={{ color: theme.text }}>{error}</Text>
-      </View>
-    );
-  }
-
-  if (!challenge) {
-    return (
-      <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <Text style={{ color: theme.text }}>
-          Şu anda aktif bir challenge bulunmuyor.
+        <Text style={{ color: theme.pinkAccent, fontSize: 16 }}>
+          {error || 'Şu anda aktif bir challenge bulunmuyor.'}
         </Text>
       </View>
     );
   }
 
   const challengeEnded = timeLeft <= 0;
+  // Dinamik figür tespiti (Bulamazsa varsayılan 🎨 piksel ikonunu basar)
+  const themeAsset = THEME_ASSETS[challenge.theme] || {
+    icon: '🎨',
+    label: challenge.theme.toUpperCase(),
+    accentColor: theme.pinkAccent,
+  };
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: theme.background },
-      ]}
-    >
-      <Text style={[styles.title, { color: theme.text }]}>
-        {challenge.title}
-      </Text>
+    <View style={[styles.mainWrapper, { backgroundColor: theme.background }]}>
+      {/* ARKA PLANPEMBE / MOR AMBİYANS IŞIKLARI */}
+      <View style={[styles.glowTopRight, { backgroundColor: theme.pinkAccent }]} />
+      <View style={styles.glowBottomLeft} />
 
-      <Text style={[styles.theme, { color: theme.brass }]}>
-        Tema: {challenge.theme}
-      </Text>
+      <ScrollView contentContainerStyle={styles.container} bounces={false}>
+        {/* ÜST GEZİNTİ / BAŞLIK */}
+        <View style={styles.headerRow}>
+          <Pressable onPress={() => router.back()} style={styles.backButton}>
+            <Text style={[styles.backText, { color: theme.text }]}>← Geri</Text>
+          </Pressable>
+          <View style={styles.arenaBadge}>
+            <Text style={styles.arenaBadgeText}>ARENA #01</Text>
+          </View>
+        </View>
 
-      <Text style={[styles.description, { color: theme.text }]}>
-        {challenge.description}
-      </Text>
-
-      <Text style={[styles.timer, { color: theme.accent }]}>
-        {challengeEnded
-          ? '⏱ Challenge sona erdi'
-          : `⏱ ${formatTimeLeft(timeLeft)}`}
-      </Text>
-
-      <Text style={[styles.idText, { color: theme.placeholder }]}>
-        Challenge ID: {challenge.id}
-      </Text>
-
-      <Pressable
-        disabled={challengeEnded}
-        onPress={() =>
-          router.push({
-            pathname: '/editor',
-            params: {
-              challengeId: challenge.id,
+        {/* ANA TEMATİK HERO KART (FIGÜRLÜ) */}
+        <View
+          style={[
+            styles.heroCard,
+            {
+              backgroundColor: theme.cardBg,
+              borderColor: theme.pinkAccent,
             },
-          })
-        }
-        style={({ pressed }) => [
-          styles.button,
-          {
-            backgroundColor: theme.accent,
-            opacity: challengeEnded ? 0.4 : pressed ? 0.8 : 1,
-          },
-        ]}
-      >
-        <Text style={styles.buttonText}>Pixel Art Oluştur</Text>
-      </Pressable>
+          ]}
+        >
+          {/* SAĞ ÜSTTEKİ BÜYÜK DİNAMİK TEMA FİGÜRÜ */}
+          <View style={styles.themeAvatarContainer}>
+            <Text style={styles.themeAvatarIcon}>{themeAsset.icon}</Text>
+          </View>
 
-      <Pressable
-        onPress={() =>
-          router.push({
-            pathname: '/submissions',
-            params: {
-              challengeId: challenge.id,
-            },
-          })
-        }
-        style={({ pressed }) => [
-          styles.button,
-          {
-            backgroundColor: theme.brass,
-            opacity: pressed ? 0.8 : 1,
-            marginTop: 12,
-          },
-        ]}
-      >
-        <Text style={styles.buttonText}>Galeriyi Gör</Text>
-      </Pressable>
+          {/* Rozet */}
+          <View style={styles.themeTag}>
+            <Text style={styles.themeTagText}>TEMA: {themeAsset.label}</Text>
+          </View>
+
+          <Text style={[styles.title, { color: theme.text }]}>
+            {challenge.title}
+          </Text>
+
+          <Text style={[styles.description, { color: theme.placeholder }]}>
+            {challenge.description}
+          </Text>
+
+          {/* SAYAÇ KUTUSU */}
+          <View style={styles.timerBox}>
+            <Text
+              style={[
+                styles.timerText,
+                { color: challengeEnded ? theme.danger : theme.pinkAccent },
+              ]}
+            >
+              {challengeEnded
+                ? '⏱ Challenge Sona Erdi'
+                : `⏱️ ${formatTimeLeft(timeLeft)}`}
+            </Text>
+          </View>
+        </View>
+
+        {/* AKSİYON BUTONLARI */}
+        <View style={styles.buttonGroup}>
+          <Pressable
+            disabled={challengeEnded}
+            onPress={() =>
+              router.push({
+                pathname: '/editor',
+                params: { challengeId: challenge.id },
+              })
+            }
+            style={({ pressed }) => [
+              styles.primaryButton,
+              {
+                backgroundColor: theme.pinkAccent,
+                opacity: challengeEnded ? 0.4 : pressed ? 0.85 : 1,
+                transform: [{ translateY: pressed ? 3 : 0 }],
+              },
+            ]}
+          >
+            <Text style={styles.primaryButtonText}>🎨 Pixel Art Oluştur</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: '/submissions',
+                params: { challengeId: challenge.id },
+              })
+            }
+            style={({ pressed }) => [
+              styles.secondaryButton,
+              {
+                borderColor: theme.pinkAccent,
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#FFF',
+                opacity: pressed ? 0.8 : 1,
+                transform: [{ translateY: pressed ? 3 : 0 }],
+              },
+            ]}
+          >
+            <Text style={[styles.secondaryButtonText, { color: theme.text }]}>
+              🖼️ Galeriyi & Çizimleri Gör
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  mainWrapper: {
     flex: 1,
-    padding: 24,
-    justifyContent: 'center',
+    position: 'relative',
   },
 
   center: {
@@ -178,44 +223,179 @@ const styles = StyleSheet.create({
     padding: 24,
   },
 
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 12,
+  /* Arka Plan Glow Doku */
+  glowTopRight: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    opacity: 0.18,
   },
 
-  theme: {
-    fontSize: 18,
-    marginBottom: 8,
+  glowBottomLeft: {
+    position: 'absolute',
+    bottom: -60,
+    left: -60,
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    backgroundColor: '#7B2CBF',
+    opacity: 0.15,
+  },
+
+  container: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 40,
+    justifyContent: 'center',
+  },
+
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+
+  backButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+
+  backText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
+  arenaBadge: {
+    backgroundColor: 'rgba(224, 128, 157, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(224, 128, 157, 0.4)',
+  },
+
+  arenaBadgeText: {
+    color: '#E0809D',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+
+  /* Hero Kart Mantığı */
+  heroCard: {
+    width: '100%',
+    padding: 24,
+    borderRadius: 20,
+    borderWidth: 2,
+    position: 'relative',
+    overflow: 'hidden',
+    marginBottom: 24,
+    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+  },
+
+  themeAvatarContainer: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(224, 128, 157, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  themeAvatarIcon: {
+    fontSize: 38,
+  },
+
+  themeTag: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#E0809D',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginBottom: 14,
+  },
+
+  themeTagText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+
+  title: {
+    fontSize: 28,
+    fontWeight: '900',
+    marginBottom: 10,
+    paddingRight: 60, // İkona çarpmaması için
   },
 
   description: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 20,
+    fontWeight: '500',
+  },
+
+  timerBox: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(224, 128, 157, 0.3)',
+  },
+
+  timerText: {
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+
+  /* Butonlar */
+  buttonGroup: {
+    gap: 14,
+  },
+
+  primaryButton: {
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 0,
+    elevation: 3,
+  },
+
+  primaryButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
-    marginBottom: 16,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
 
-  timer: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 12,
-  },
-
-  idText: {
-    fontSize: 12,
-    marginBottom: 24,
-  },
-
-  button: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+  secondaryButton: {
+    paddingVertical: 15,
+    borderRadius: 14,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+  secondaryButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
   },
 });
