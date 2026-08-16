@@ -25,17 +25,17 @@ const THEMES = [
     {
         theme: 'gece_acikmalari',
         title: 'Gece Acıkmaları',
-        description: 'Gece saat 3\'te buzdolabını açtığında sana bakan o leziz dilim! Acıktıran, ağız sulandıran pikseller gelsin. 🍕🍟🍔',
+        description: "Gece saat 3'te buzdolabını açtığında sana bakan o leziz dilim! Acıktıran, ağız sulandıran pikseller gelsin. 🍕🍟🍔",
     },
     {
-        theme: 'büyülü_dunyam',
+        theme: 'buyulu_dunyam',
         title: 'Büyülü Dünyam',
         description: 'Ejderhanın sırtında çay içen büyücü! Fantastik dünyaların kapısını arala, hayal gücünü serbest bırak. 🧙‍♂️🐉🦄',
     },
     {
         theme: 'nostalji_atari',
         title: 'Nostalji Atari',
-        description: '90\'ların atari salonlarına geri dönüyoruz! Kaset üfleme günlerinin hatırına en nostaljik pikselini döktür. 🕹️🎮👾',
+        description: "90'ların atari salonlarına geri dönüyoruz! Kaset üfleme günlerinin hatırına en nostaljik pikselini döktür. 🕹️🎮👾",
     },
     {
         theme: 'gelecegin_sehri',
@@ -69,52 +69,97 @@ const THEMES = [
     },
 ];
 const CHALLENGE_DURATION_MS = 24 * 60 * 60 * 1000;
-exports.manageChallenges = (0, scheduler_1.onSchedule)('every 5 minutes', async () => {
+exports.manageChallenges = (0, scheduler_1.onSchedule)({
+    schedule: 'every 5 minutes',
+    maxInstances: 1,
+}, async () => {
     const now = new Date();
-    const activeSnapshot = await db
-        .collection('challenges')
-        .where('status', '==', 'active')
-        .limit(1)
-        .get();
-    // Aktif challenge varsa ve süresi devam ediyorsa hiçbir şey yapma.
-    if (!activeSnapshot.empty) {
-        const activeChallenge = activeSnapshot.docs[0];
-        const data = activeChallenge.data();
-        const endsAt = data.endsAt?.toDate();
-        if (endsAt && endsAt > now) {
-            console.log('Aktif challenge devam ediyor.');
-            return;
+    const nowTimestamp = firestore_1.Timestamp.fromDate(now);
+    try {
+        /*
+         * 1. Şu anda aktif challenge var mı?
+         */
+        const activeSnapshot = await db
+            .collection('challenges')
+            .where('status', '==', 'active')
+            .limit(1)
+            .get();
+        if (!activeSnapshot.empty) {
+            const activeChallenge = activeSnapshot.docs[0];
+            const data = activeChallenge.data();
+            const endsAt = data.endsAt.toDate();
+            /*
+             * Challenge'ın süresi henüz dolmadıysa
+             * yeni challenge oluşturma.
+             */
+            if (endsAt > now) {
+                console.log('Aktif challenge devam ediyor:', activeChallenge.id);
+                return;
+            }
+            /*
+             * 2. Challenge'ın süresi doldu.
+             * En yüksek oy alan submission'ı bul.
+             */
+            const submissionsSnapshot = await db
+                .collection('submissions')
+                .where('challengeId', '==', activeChallenge.id)
+                .orderBy('voteCount', 'desc')
+                .limit(1)
+                .get();
+            const winnerSubmissionId = submissionsSnapshot.empty
+                ? null
+                : submissionsSnapshot.docs[0].id;
+            /*
+             * 3. Challenge'ı tamamla ve kazananı kaydet.
+             */
+            await activeChallenge.ref.update({
+                status: 'completed',
+                completedAt: nowTimestamp,
+                winnerSubmissionId,
+            });
+            console.log('Challenge tamamlandı:', activeChallenge.id, 'Kazanan:', winnerSubmissionId ?? 'katılım olmadı');
         }
-        // Süresi dolmuş challenge
-        await activeChallenge.ref.update({
-            status: 'completed',
-            completedAt: now,
+        /*
+         * 4. En son oluşturulan challenge'ın temasını bul.
+         * Aynı temanın arka arkaya gelmesini engelliyoruz.
+         */
+        const latestSnapshot = await db
+            .collection('challenges')
+            .orderBy('createdAt', 'desc')
+            .limit(1)
+            .get();
+        const previousTheme = latestSnapshot.empty
+            ? null
+            : latestSnapshot.docs[0].data().theme;
+        /*
+         * 5. Önceki challenge'ın temasını çıkar.
+         */
+        const availableThemes = THEMES.filter((item) => item.theme !== previousTheme);
+        /*
+         * 6. Rastgele yeni tema seç.
+         */
+        const selectedTheme = availableThemes[Math.floor(Math.random() * availableThemes.length)];
+        const startsAt = now;
+        const endsAt = new Date(now.getTime() + CHALLENGE_DURATION_MS);
+        /*
+         * 7. Yeni challenge oluştur.
+         */
+        const challengeRef = await db
+            .collection('challenges')
+            .add({
+            title: selectedTheme.title,
+            theme: selectedTheme.theme,
+            description: selectedTheme.description,
+            status: 'active',
+            startsAt: firestore_1.Timestamp.fromDate(startsAt),
+            endsAt: firestore_1.Timestamp.fromDate(endsAt),
+            winnerSubmissionId: null,
+            createdAt: nowTimestamp,
+            completedAt: null,
         });
-        console.log('Challenge tamamlandı:', activeChallenge.id);
+        console.log('Yeni challenge oluşturuldu:', challengeRef.id, selectedTheme.theme);
     }
-    // Son challenge'ı bulup aynı temayı tekrar seçmemeye çalış.
-    const latestSnapshot = await db
-        .collection('challenges')
-        .orderBy('createdAt', 'desc')
-        .limit(1)
-        .get();
-    const previousTheme = latestSnapshot.empty
-        ? null
-        : latestSnapshot.docs[0].data().theme;
-    const availableThemes = THEMES.filter((item) => item.theme !== previousTheme);
-    const selectedTheme = availableThemes[Math.floor(Math.random() * availableThemes.length)];
-    const startsAt = now;
-    const endsAt = new Date(now.getTime() + CHALLENGE_DURATION_MS);
-    const challengeRef = await db.collection('challenges').add({
-        title: selectedTheme.title,
-        theme: selectedTheme.theme,
-        description: selectedTheme.description,
-        status: 'active',
-        startsAt,
-        endsAt,
-        winnerSubmissionId: null,
-        createdAt: now,
-        completedAt: null,
-    });
-    console.log('Yeni challenge oluşturuldu:', challengeRef.id, selectedTheme.theme);
+    catch (error) {
+        console.error('manageChallenges fonksiyonunda hata:', error);
+    }
 });

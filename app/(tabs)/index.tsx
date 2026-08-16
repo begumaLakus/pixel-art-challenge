@@ -40,6 +40,7 @@ export default function HomeScreen() {
   };
 
   return (
+
     <View style={[styles.mainWrapper, { backgroundColor: theme.background }]}>
       {/* ARKA PLAN ORB/GLOW EFEKTLERİ (Düzlüğü Kıran Katmanlar) */}
       <View style={styles.glowTopRight} />

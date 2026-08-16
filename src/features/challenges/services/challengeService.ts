@@ -1,9 +1,10 @@
 import {
-    collection,
-    getDocs,
-    limit,
-    query,
-    where,
+  collection,
+  getDocs,
+  limit,
+  query,
+  Timestamp,
+  where,
 } from 'firebase/firestore';
 
 import { db } from '@/src/services/firebase/firestore';
@@ -11,23 +12,28 @@ import type { Challenge } from '../types/challenge';
 
 const challengesCollection = collection(db, 'challenges');
 
-export const getActiveChallenge = async (): Promise<Challenge | null> => {
-  const activeChallengeQuery = query(
-    challengesCollection,
-    where('status', '==', 'active'),
-    limit(1),
-  );
+export const getActiveChallenge =
+  async (): Promise<Challenge | null> => {
+    const now = Timestamp.now();
 
-  const snapshot = await getDocs(activeChallengeQuery);
+    const activeChallengeQuery = query(
+      challengesCollection,
+      where('status', '==', 'active'),
+      where('startsAt', '<=', now),
+      where('endsAt', '>', now),
+      limit(1),
+    );
 
-  if (snapshot.empty) {
-    return null;
-  }
+    const snapshot = await getDocs(activeChallengeQuery);
 
-  const document = snapshot.docs[0];
+    if (snapshot.empty) {
+      return null;
+    }
 
-  return {
-    id: document.id,
-    ...document.data(),
-  } as Challenge;
-};
+    const document = snapshot.docs[0];
+
+    return {
+      id: document.id,
+      ...document.data(),
+    } as Challenge;
+  };

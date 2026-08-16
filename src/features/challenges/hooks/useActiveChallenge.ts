@@ -10,34 +10,51 @@ interface UseActiveChallengeResult {
   refetch: () => Promise<void>;
 }
 
-export const useActiveChallenge = (): UseActiveChallengeResult => {
-  const [challenge, setChallenge] = useState<Challenge | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+export const useActiveChallenge =
+  (): UseActiveChallengeResult => {
+    const [challenge, setChallenge] =
+      useState<Challenge | null>(null);
 
-  const fetchChallenge = useCallback(async (): Promise<void> => {
-    try {
-      setLoading(true);
-      setError(null);
+    const [loading, setLoading] =
+      useState<boolean>(true);
 
-      const activeChallenge = await getActiveChallenge();
+    const [error, setError] =
+      useState<string | null>(null);
 
-      setChallenge(activeChallenge);
-    } catch {
-      setError('Aktif challenge yüklenirken bir hata oluştu.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    const fetchChallenge = useCallback(
+      async (): Promise<void> => {
+        try {
+          setLoading(true);
+          setError(null);
 
-  useEffect(() => {
-    void fetchChallenge();
-  }, [fetchChallenge]);
+          const activeChallenge =
+            await getActiveChallenge();
 
-  return {
-    challenge,
-    loading,
-    error,
-    refetch: fetchChallenge,
+          setChallenge(activeChallenge);
+        } catch (error) {
+          console.error(
+            'Aktif challenge yüklenirken hata:',
+            error,
+          );
+
+          setError(
+            'Aktif challenge yüklenirken bir hata oluştu.',
+          );
+        } finally {
+          setLoading(false);
+        }
+      },
+      [],
+    );
+
+    useEffect(() => {
+      void fetchChallenge();
+    }, [fetchChallenge]);
+
+    return {
+      challenge,
+      loading,
+      error,
+      refetch: fetchChallenge,
+    };
   };
-};

@@ -49,10 +49,10 @@ export const ChallengeScreen = () => {
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
   useEffect(() => {
-    if (!challenge?.endAt) return;
+    if (!challenge?.endsAt) return;
 
     const calculateTimeLeft = () => {
-      const endTime = challenge.endAt.toDate().getTime();
+      const endTime = challenge.endsAt.toDate().getTime();
       const remaining = Math.max(0, endTime - Date.now());
       setTimeLeft(remaining);
     };
