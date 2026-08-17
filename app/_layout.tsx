@@ -1,38 +1,64 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  View,
+} from 'react-native';
 import 'react-native-reanimated';
+import {
+  SafeAreaProvider,
+} from 'react-native-safe-area-context';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/src/features/auth/hooks/useAuth';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-function AuthGate({ children }: { children: React.ReactNode }) {
+function AuthGate({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    if (loading) return;
+    if (loading) {
+      return;
+    }
 
     const inAuthGroup = segments[0] === 'auth';
 
     if (!user && !inAuthGroup) {
       router.replace('/auth/login');
-    } else if (user && inAuthGroup) {
+      return;
+    }
+
+    if (user && inAuthGroup) {
       router.replace('/(tabs)');
     }
   }, [user, loading, segments, router]);
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
-        <ActivityIndicator size="large" color="#000" />
+      <View style={styles.loadingContainer}>
+        <View style={styles.loadingLogo}>
+          <View style={styles.loadingPixel} />
+          <View style={styles.loadingPixel} />
+          <View style={styles.loadingPixel} />
+          <View style={styles.loadingPixel} />
+        </View>
+
+        <ActivityIndicator
+          size="small"
+          color="#FF2A85"
+          style={styles.loadingIndicator}
+        />
       </View>
     );
   }
@@ -41,18 +67,77 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AuthGate>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="auth" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        </Stack>
-      </AuthGate>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider value={DarkTheme}>
+        <AuthGate>
+          <Stack
+            screenOptions={{
+              contentStyle: {
+                backgroundColor: '#0A0714',
+              },
+              headerShown: false,
+            }}
+          >
+            <Stack.Screen
+              name="(tabs)"
+              options={{
+                headerShown: false,
+              }}
+            />
+
+            <Stack.Screen
+              name="auth"
+              options={{
+                headerShown: false,
+              }}
+            />
+
+            <Stack.Screen
+              name="modal"
+              options={{
+                presentation: 'modal',
+                headerShown: false,
+              }}
+            />
+          </Stack>
+        </AuthGate>
+
+        <StatusBar
+          style="light"
+          translucent
+          backgroundColor="transparent"
+        />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#0A0714',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  loadingLogo: {
+    width: 52,
+    height: 52,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    padding: 4,
+    marginBottom: 20,
+  },
+
+  loadingPixel: {
+    width: 20,
+    height: 20,
+    backgroundColor: '#FF2A85',
+  },
+
+  loadingIndicator: {
+    marginTop: 4,
+  },
+});

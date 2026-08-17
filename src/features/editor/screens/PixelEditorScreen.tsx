@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import {
   Alert,
@@ -7,14 +8,15 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { CyberArcade } from '@/constants/theme';
 
 import { createSubmission } from '../../submission/services/submissionService';
-
-import { router } from 'expo-router';
 import { PixelGrid } from '../components/PixelGrid';
 import {
-  usePixelEditor,
   type PixelResolution,
+  usePixelEditor,
 } from '../hooks/usePixelEditor';
 
 interface PixelEditorScreenProps {
@@ -86,13 +88,16 @@ const PALETTE = [
   '#F48FB1',
   '#F8BBD0',
 
-  '#FDFBF7',
+  '#FFFFFF',
 ];
 
 export const PixelEditorScreen = ({
   challengeId,
 }: PixelEditorScreenProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const insets = useSafeAreaInsets();
+
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
 
   const {
     pixels,
@@ -108,6 +113,20 @@ export const PixelEditorScreen = ({
     newResolution: PixelResolution,
   ): void => {
     setResolution(newResolution);
+  };
+
+  /*
+   * SİLGİ:
+   *
+   * Burada klasik tek pixel silgisi kullanmıyoruz.
+   * Kullanıcı silgiye bastığında bütün çalışma temizleniyor.
+   */
+  const handleErase = (): void => {
+    if (isSubmitting) {
+      return;
+    }
+
+    resetPixels();
   };
 
   const handleSubmit = async (): Promise<void> => {
@@ -140,7 +159,10 @@ export const PixelEditorScreen = ({
         },
       );
     } catch (error) {
-      console.error('Submission oluşturulamadı:', error);
+      console.error(
+        'Submission oluşturulamadı:',
+        error,
+      );
 
       const message =
         error instanceof Error
@@ -154,9 +176,57 @@ export const PixelEditorScreen = ({
   };
 
   return (
-    <View style={styles.container}>
-      {/* CANVAS AREA */}
+    <View
+      style={[
+        styles.container,
+        {
+          paddingBottom: insets.bottom,
+        },
+      ]}
+    >
+      {/* HEADER */}
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: insets.top + 8,
+          },
+        ]}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          style={({ pressed }) => [
+            styles.backButton,
+            pressed && styles.pressed,
+          ]}
+          hitSlop={10}
+        >
+          <Text style={styles.backButtonText}>
+            ←
+          </Text>
+
+          <Text style={styles.backButtonLabel}>
+            ARENA
+          </Text>
+        </Pressable>
+
+        <Text style={styles.headerTitle}>
+          PIXEL EDITOR
+        </Text>
+
+        <View style={styles.headerSpacer} />
+      </View>
+
+      {/* CANVAS */}
       <View style={styles.canvasArea}>
+        <View style={styles.canvasLabel}>
+          <View style={styles.canvasLabelDot} />
+
+          <Text style={styles.canvasLabelText}>
+            DRAWING BOARD
+          </Text>
+        </View>
+
         <PixelGrid
           pixels={pixels}
           resolution={resolution}
@@ -164,92 +234,133 @@ export const PixelEditorScreen = ({
         />
       </View>
 
-      {/* BOTTOM CONTROL PANEL */}
+      {/* CONTROL PANEL */}
       <View style={styles.controlPanel}>
-        {/* COLOR PALETTE */}
-        <View style={styles.paletteSection}>
-          <View style={styles.paletteHeader}>
+        {/* PALETTE HEADER */}
+        <View style={styles.paletteHeader}>
+          <View>
             <Text style={styles.paletteTitle}>
-              Renkler
+              RENK PALETİ
             </Text>
+
+            <Text style={styles.paletteSubtitle}>
+              Bir renk seç
+            </Text>
+          </View>
+
+          <View style={styles.selectedColorWrapper}>
+            <View
+              style={[
+                styles.selectedColorPreview,
+                {
+                  backgroundColor: selectedColor,
+                },
+              ]}
+            />
 
             <Text style={styles.selectedColorText}>
               {selectedColor}
             </Text>
           </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.palette}
-          >
-            {PALETTE.map((color) => (
-              <Pressable
-                key={color}
-                onPress={() => setSelectedColor(color)}
-                style={[
-                  styles.color,
-                  {
-                    backgroundColor: color,
-                  },
-                  selectedColor === color &&
-                    styles.selectedColor,
-                ]}
-              />
-            ))}
-          </ScrollView>
         </View>
 
-        {/* ACTIONS */}
-        <View style={styles.actions}>
-          <View style={styles.resolutionContainer}>
-            {[16, 32].map((size) => {
-              const isSelected = resolution === size;
+        {/* COLOR PALETTE */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.palette}
+        >
+          {PALETTE.map((color) => (
+            <Pressable
+              key={color}
+              onPress={() => setSelectedColor(color)}
+              style={({ pressed }) => [
+                styles.color,
+                {
+                  backgroundColor: color,
+                },
+                selectedColor === color &&
+                  styles.selectedColor,
+                pressed && styles.colorPressed,
+              ]}
+            />
+          ))}
+        </ScrollView>
 
-              return (
-                <Pressable
-                  key={size}
-                  onPress={() =>
-                    handleResolutionChange(
-                      size as PixelResolution,
-                    )
-                  }
-                  style={[
-                    styles.resolutionButton,
-                    isSelected &&
-                      styles.selectedResolution,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.resolutionText,
+        {/* CONTROLS */}
+        <View style={styles.controls}>
+          {/* RESOLUTION */}
+          <View style={styles.resolutionContainer}>
+            <Text style={styles.controlLabel}>
+              GRID
+            </Text>
+
+            <View style={styles.resolutionButtons}>
+              {[16, 32].map((size) => {
+                const isSelected =
+                  resolution === size;
+
+                return (
+                  <Pressable
+                    key={size}
+                    onPress={() =>
+                      handleResolutionChange(
+                        size as PixelResolution,
+                      )
+                    }
+                    style={({ pressed }) => [
+                      styles.resolutionButton,
                       isSelected &&
-                        styles.selectedResolutionText,
+                        styles.selectedResolution,
+                      pressed && styles.pressed,
                     ]}
                   >
-                    {size}×{size}
-                  </Text>
-                </Pressable>
-              );
-            })}
+                    <Text
+                      style={[
+                        styles.resolutionText,
+                        isSelected &&
+                          styles.selectedResolutionText,
+                      ]}
+                    >
+                      {size}×{size}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
 
+          {/* ACTION BUTTONS */}
           <View style={styles.actionButtons}>
+            {/* SİLGİ / TÜMÜNÜ TEMİZLE */}
             <Pressable
-              onPress={resetPixels}
+              onPress={handleErase}
               disabled={isSubmitting}
-              style={styles.secondaryButton}
+              style={({ pressed }) => [
+                styles.eraseButton,
+                pressed &&
+                  styles.eraseButtonPressed,
+                isSubmitting &&
+                  styles.disabledButton,
+              ]}
             >
-              <Text style={styles.secondaryButtonText}>
-                Temizle
+              <Text style={styles.eraseIcon}>
+                🧹
+              </Text>
+
+              <Text style={styles.eraseButtonText}>
+                Silgi
               </Text>
             </Pressable>
 
+            {/* SUBMIT */}
             <Pressable
               onPress={handleSubmit}
               disabled={isSubmitting}
-              style={[
+              style={({ pressed }) => [
                 styles.submitButton,
+                pressed &&
+                  styles.submitButtonPressed,
                 isSubmitting &&
                   styles.disabledButton,
               ]}
@@ -259,6 +370,12 @@ export const PixelEditorScreen = ({
                   ? 'Gönderiliyor...'
                   : 'Gönder'}
               </Text>
+
+              {!isSubmitting && (
+                <Text style={styles.submitArrow}>
+                  →
+                </Text>
+              )}
             </Pressable>
           </View>
         </View>
@@ -268,79 +385,204 @@ export const PixelEditorScreen = ({
 };
 
 const styles = StyleSheet.create({
+  /*
+   * ANA EKRAN
+   *
+   * Artık eski #F3EFE8 yok.
+   * HomeScreen'deki CyberArcade.background
+   * ile aynı tema kullanılıyor.
+   */
   container: {
     flex: 1,
-    backgroundColor: '#F3EFE8',
+    backgroundColor: CyberArcade.background,
   },
 
+  /* HEADER */
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+
+    backgroundColor: CyberArcade.background,
+  },
+
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 90,
+  },
+
+  backButtonText: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: '800',
+    color: CyberArcade.secondaryText,
+  },
+
+  backButtonLabel: {
+    marginLeft: 6,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+    color: CyberArcade.secondaryText,
+  },
+
+  headerTitle: {
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+    color: CyberArcade.white,
+  },
+
+  headerSpacer: {
+    width: 90,
+  },
+
+  /* CANVAS AREA */
   canvasArea: {
     flex: 1,
+    minHeight: 0,
+
     alignItems: 'center',
     justifyContent: 'center',
+
     paddingHorizontal: 10,
-    paddingBottom: 10,
+    paddingVertical: 10,
+
+    backgroundColor: CyberArcade.background,
   },
 
+  canvasLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+
+    marginBottom: 10,
+
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+
+    borderRadius: 7,
+
+    backgroundColor:
+      'rgba(255, 183, 3, 0.10)',
+
+    borderWidth: 1,
+    borderColor:
+      'rgba(255, 183, 3, 0.22)',
+  },
+
+  canvasLabelDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+
+    marginRight: 6,
+
+    backgroundColor: CyberArcade.gold,
+  },
+
+  canvasLabelText: {
+    color: CyberArcade.gold,
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+  },
+
+  /* CONTROL PANEL */
   controlPanel: {
-    backgroundColor: 'rgba(255, 252, 246, 0.94)',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: CyberArcade.surface,
+
+    borderTopWidth: 1,
+    borderTopColor: CyberArcade.border,
+
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
 
     paddingTop: 14,
-    paddingBottom: 24,
     paddingHorizontal: 16,
+    paddingBottom: 12,
 
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: -4,
+      height: -5,
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
+    shadowOpacity: 0.25,
+    shadowRadius: 14,
 
-    elevation: 8,
+    elevation: 10,
   },
 
-  paletteSection: {
-    marginBottom: 14,
-  },
-
+  /* PALETTE */
   paletteHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+
+    marginBottom: 9,
   },
 
   paletteTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#5D4037',
+    color: CyberArcade.white,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+  },
+
+  paletteSubtitle: {
+    marginTop: 2,
+    color: CyberArcade.mutedText,
+    fontSize: 9,
+  },
+
+  selectedColorWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  selectedColorPreview: {
+    width: 18,
+    height: 18,
+
+    marginRight: 7,
+
+    borderRadius: 5,
+
+    borderWidth: 1,
+    borderColor: CyberArcade.border,
   },
 
   selectedColorText: {
-    fontSize: 11,
-    color: '#9E8F84',
+    color: CyberArcade.secondaryText,
+    fontSize: 9,
+    fontWeight: '700',
   },
 
   palette: {
     alignItems: 'center',
+    paddingVertical: 4,
     paddingRight: 8,
   },
 
   color: {
-    width: 32,
-    height: 32,
-    marginRight: 8,
+    width: 30,
+    height: 30,
+
+    marginRight: 7,
+
     borderRadius: 7,
 
     borderWidth: 1,
-    borderColor: 'rgba(70, 55, 45, 0.12)',
+    borderColor:
+      'rgba(255, 255, 255, 0.12)',
   },
 
   selectedColor: {
     borderWidth: 3,
-    borderColor: '#5D4037',
+    borderColor: CyberArcade.gold,
 
     transform: [
       {
@@ -349,13 +591,33 @@ const styles = StyleSheet.create({
     ],
   },
 
-  actions: {
+  colorPressed: {
+    opacity: 0.7,
+  },
+
+  /* CONTROLS */
+  controls: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
+
+    marginTop: 10,
+  },
+
+  controlLabel: {
+    marginBottom: 5,
+
+    color: CyberArcade.mutedText,
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
 
   resolutionContainer: {
+    flexShrink: 1,
+  },
+
+  resolutionButtons: {
     flexDirection: 'row',
     gap: 6,
   },
@@ -364,61 +626,127 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 11,
 
-    borderRadius: 10,
+    borderRadius: 9,
 
-    backgroundColor: 'rgba(93, 64, 55, 0.06)',
+    backgroundColor:
+      CyberArcade.surfacePressed,
+
+    borderWidth: 1,
+    borderColor: CyberArcade.border,
   },
 
   selectedResolution: {
-    backgroundColor: '#5D4037',
+    backgroundColor: CyberArcade.purple,
+
+    borderColor: CyberArcade.purple,
   },
 
   resolutionText: {
-    fontSize: 12,
-    color: '#6D5B52',
-    fontWeight: '500',
-  },
-
-  selectedResolutionText: {
-    color: '#FDFBF7',
-  },
-
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-
-  secondaryButton: {
-    paddingVertical: 9,
-    paddingHorizontal: 14,
-
-    borderRadius: 10,
-
-    backgroundColor: 'rgba(93, 64, 55, 0.06)',
-  },
-
-  secondaryButtonText: {
-    fontSize: 12,
-    color: '#6D5B52',
-    fontWeight: '600',
-  },
-
-  submitButton: {
-    paddingVertical: 9,
-    paddingHorizontal: 17,
-
-    borderRadius: 10,
-
-    backgroundColor: '#8A6A4A',
-  },
-
-  submitButtonText: {
-    fontSize: 12,
-    color: '#FDFBF7',
+    color: CyberArcade.secondaryText,
+    fontSize: 11,
     fontWeight: '700',
   },
 
+  selectedResolutionText: {
+    color: CyberArcade.white,
+  },
+
+  /* ACTION BUTTONS */
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+
+    gap: 7,
+
+    marginLeft: 10,
+  },
+
+  /* SİLGİ */
+  eraseButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+
+    paddingVertical: 9,
+    paddingHorizontal: 11,
+
+    borderRadius: 9,
+
+    backgroundColor:
+      'rgba(255, 183, 3, 0.10)',
+
+    borderWidth: 1,
+    borderColor:
+      'rgba(255, 183, 3, 0.30)',
+  },
+
+  eraseButtonPressed: {
+    backgroundColor:
+      'rgba(255, 183, 3, 0.18)',
+  },
+
+  eraseIcon: {
+    fontSize: 13,
+    marginRight: 5,
+  },
+
+  eraseButtonText: {
+    color: CyberArcade.gold,
+    fontSize: 11,
+    fontWeight: '800',
+  },
+
+  /* GÖNDER */
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+
+    paddingVertical: 9,
+    paddingHorizontal: 13,
+
+    borderRadius: 9,
+
+    backgroundColor: CyberArcade.magenta,
+
+    shadowColor: CyberArcade.magenta,
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+
+    elevation: 4,
+  },
+
+  submitButtonPressed: {
+    opacity: 0.8,
+    transform: [
+      {
+        translateY: 1,
+      },
+    ],
+  },
+
+  submitButtonText: {
+    color: CyberArcade.white,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+
+  submitArrow: {
+    marginLeft: 5,
+
+    color: CyberArcade.white,
+    fontSize: 15,
+    fontWeight: '900',
+  },
+
+  /* GENERAL */
+  pressed: {
+    opacity: 0.7,
+  },
+
   disabledButton: {
-    opacity: 0.5,
+    opacity: 0.45,
   },
 });

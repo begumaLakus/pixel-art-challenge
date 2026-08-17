@@ -68,7 +68,8 @@ export const PixelGrid = ({
     );
 
     for (let step = 0; step <= steps; step += 1) {
-      const progress = steps === 0 ? 0 : step / steps;
+      const progress =
+        steps === 0 ? 0 : step / steps;
 
       const column = Math.round(
         startColumn + deltaColumn * progress,
@@ -131,7 +132,8 @@ export const PixelGrid = ({
         {
           width: gridSize,
           height: gridSize,
-          borderRadius: resolution === 16 ? 12 : 8,
+          borderRadius:
+            resolution === 16 ? 12 : 8,
         },
       ]}
       onStartShouldSetResponderCapture={() => true}
@@ -159,9 +161,15 @@ export const PixelGrid = ({
             width: pixelSize,
             height: pixelSize,
             backgroundColor: color,
-            borderWidth: resolution === 16 ? 0.45 : 0.3,
-            borderColor: 'rgba(90, 75, 65, 0.18)',
-            borderRadius: resolution === 16 ? 1.5 : 1,
+
+            // Pixel grid çizgileri
+            borderWidth:
+              resolution === 16 ? 0.45 : 0.3,
+            borderColor:
+              'rgba(90, 75, 65, 0.18)',
+
+            borderRadius:
+              resolution === 16 ? 1.5 : 1,
           }}
         />
       ))}
@@ -174,15 +182,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     overflow: 'hidden',
-    backgroundColor: '#FDFBF7',
 
-    shadowColor: '#000',
+    // Çizim alanının kendisi BEYAZ kalacak.
+    backgroundColor: '#FFFFFF',
+
+    // Turuncu/amber çerçeve
+    borderWidth: 2,
+    borderColor: '#FFB703',
+
+    // Hafif tema uyumlu gölge
+    shadowColor: '#FFB703',
     shadowOffset: {
       width: 0,
-      height: 6,
+      height: 5,
     },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
     elevation: 5,
   },
 });

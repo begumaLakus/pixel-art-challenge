@@ -1,29 +1,58 @@
 export const AntiqueColors = {
   light: {
-    background: '#F9F8F5',
-    surface: '#FFFDFC',
+    background: '#0A0714',
+    surface: '#140F26',
+    text: '#FFFFFF',
+    placeholder: '#94A3B8',
+    muted: '#64748B',
+    border: '#281F45',
 
-    text: '#35443D',
-    placeholder: '#8A9891',
-    border: '#DDE8E2',
+    accent: '#FF2A85',
+    mint: '#00F5D4',
+    gold: '#FFB703',
 
-    accent: '#D99AAE',      // toz pembe
-    brass: '#8FC8B5',       // su yeşili
-    success: '#8FC8B5',
-    danger: '#D98F9F',
+    success: '#00F5D4',
+    danger: '#FF4D6D',
   },
 
   dark: {
-    background: '#1D2522',
-    surface: '#26302C',
+    background: '#0A0714',
+    surface: '#140F26',
+    text: '#FFFFFF',
+    placeholder: '#94A3B8',
+    muted: '#64748B',
+    border: '#281F45',
 
-    text: '#F7F6F2',
-    placeholder: '#A8B7B0',
-    border: '#40504A',
+    accent: '#FF2A85',
+    mint: '#00F5D4',
+    gold: '#FFB703',
 
-    accent: '#D99AAE',      // toz pembe
-    brass: '#8FC8B5',       // su yeşili
-    success: '#8FC8B5',
-    danger: '#D98F9F',
+    success: '#00F5D4',
+    danger: '#FF4D6D',
   },
-};
+} as const;
+
+export const CyberArcade = {
+  background: '#0A0714',
+  surface: '#140F26',
+  border: '#281F45',
+
+  magenta: '#FF2A85',
+  mint: '#00F5D4',
+  gold: '#FFB703',
+
+  white: '#FFFFFF',
+  secondaryText: '#94A3B8',
+  mutedText: '#64748B',
+
+  purple: '#7B2CBF',
+  goldGlow: 'rgba(255, 183, 3, 0.10)',
+  danger: '#FF3B6B',
+
+  magentaGlow: 'rgba(255, 42, 133, 0.12)',
+  mintGlow: 'rgba(0, 245, 212, 0.10)',
+  purpleGlow: 'rgba(123, 44, 191, 0.12)',
+
+  surfaceRaised: '#1A1430',
+  surfacePressed: '#211A3A',
+} as const;

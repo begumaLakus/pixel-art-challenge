@@ -7,6 +7,7 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AntiqueColors } from '@/constants/theme';
 
@@ -16,7 +17,10 @@ import { useArchive } from '../hooks/useArchive';
 export const ArchiveScreen = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const baseTheme = AntiqueColors[isDark ? 'dark' : 'light'];
+  const insets = useSafeAreaInsets();
+
+  const baseTheme =
+    AntiqueColors[isDark ? 'dark' : 'light'];
 
   const theme = {
     ...baseTheme,
@@ -25,19 +29,22 @@ export const ArchiveScreen = () => {
     cardBorder: isDark ? '#2D223B' : '#F0E6ED',
   };
 
-  const { archivedChallenges, loading, error, refresh } =
-    useArchive();
+  const {
+    archivedChallenges,
+    loading,
+    error,
+    refresh,
+  } = useArchive();
 
-  /*
-   * Tam ekran spinner yalnızca ilk yüklemede.
-   * Sonraki yenilemeler listenin refresh control'ü ile gösteriliyor.
-   */
   if (loading && archivedChallenges.length === 0) {
     return (
       <View
         style={[
           styles.center,
-          { backgroundColor: theme.background },
+          {
+            backgroundColor: theme.background,
+            paddingTop: insets.top,
+          },
         ]}
       >
         <ActivityIndicator
@@ -53,7 +60,10 @@ export const ArchiveScreen = () => {
       <View
         style={[
           styles.center,
-          { backgroundColor: theme.background },
+          {
+            backgroundColor: theme.background,
+            paddingTop: insets.top,
+          },
         ]}
       >
         <Text
@@ -91,47 +101,63 @@ export const ArchiveScreen = () => {
   return (
     <View
       style={[
-        styles.mainWrapper,
+        styles.screen,
         { backgroundColor: theme.background },
       ]}
     >
-      {/* ARKA PLAN AMBİYANS IŞIKLARI */}
+      {/* BACKGROUND GLOWS */}
       <View
+        pointerEvents="none"
         style={[
           styles.glowTopRight,
-          { backgroundColor: theme.pinkAccent },
+          {
+            backgroundColor: theme.pinkAccent,
+          },
         ]}
       />
-      <View style={styles.glowBottomLeft} />
 
-      <View style={styles.container}>
-        {/* HEADER SECTION */}
+      <View
+        pointerEvents="none"
+        style={styles.glowBottomLeft}
+      />
+
+      <View
+        style={[
+          styles.container,
+          {
+            paddingTop: insets.top + 16,
+            paddingBottom: Math.max(insets.bottom, 16),
+          },
+        ]}
+      >
+        {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerTopRow}>
             <View style={styles.archiveBadge}>
-              <Text style={styles.archiveBadgeText}>
-                🏆 GEÇMİŞ ŞAMPİYONLAR
+              <Text
+                style={styles.archiveBadgeText}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+              >
+                🏆 PixelArt Arşivi
               </Text>
             </View>
 
             <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>
+              <Text
+                style={styles.countBadgeText}
+                numberOfLines={1}
+              >
                 {archivedChallenges.length} Arena
               </Text>
             </View>
           </View>
 
-          <Text
-            style={[styles.title, { color: theme.text }]}
-          >
-            Pixel Art{' '}
-            <Text style={{ color: theme.pinkAccent }}>
-              Arşivi
-            </Text>
-          </Text>
+          
         </View>
 
-        {/* LİSTE VEYA BOŞ DURUM */}
+        {/* CONTENT */}
         {archivedChallenges.length === 0 ? (
           <View
             style={[
@@ -142,7 +168,9 @@ export const ArchiveScreen = () => {
               },
             ]}
           >
-            <Text style={styles.emptyIcon}>🗓️</Text>
+            <Text style={styles.emptyIcon}>
+              🗓️
+            </Text>
 
             <Text
               style={[
@@ -159,8 +187,8 @@ export const ArchiveScreen = () => {
                 { color: theme.placeholder },
               ]}
             >
-              Tamamlanan ilk meydan okumadan sonra kazananlar
-              burada sergilenecek.
+              Tamamlanan ilk meydan okumadan sonra
+              kazananlar burada sergilenecek.
             </Text>
           </View>
         ) : (
@@ -168,12 +196,17 @@ export const ArchiveScreen = () => {
             data={archivedChallenges}
             keyExtractor={(item) => item.challenge.id}
             renderItem={({ item }) => (
-              <ArchiveCard archivedChallenge={item} />
+              <View style={styles.cardWrapper}>
+                <ArchiveCard
+                  archivedChallenge={item}
+                />
+              </View>
             )}
             contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}
             refreshing={loading}
             onRefresh={refresh}
+            removeClippedSubviews
           />
         )}
       </View>
@@ -182,20 +215,149 @@ export const ArchiveScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  mainWrapper: {
+  screen: {
     flex: 1,
     position: 'relative',
+  },
+
+  container: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 600,
+    alignSelf: 'center',
+    paddingHorizontal: 16,
   },
 
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    paddingHorizontal: 24,
   },
 
+  /* BACKGROUND */
+  glowTopRight: {
+    position: 'absolute',
+    top: -70,
+    right: -70,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    opacity: 0.15,
+  },
+
+  glowBottomLeft: {
+    position: 'absolute',
+    bottom: -80,
+    left: -80,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: '#7B2CBF',
+    opacity: 0.12,
+  },
+
+  /* HEADER */
+  header: {
+    width: '100%',
+    marginBottom: 16,
+  },
+
+  headerTopRow: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+
+  archiveBadge: {
+    flex: 1,
+    minWidth: 0,
+    backgroundColor: 'rgba(224, 128, 157, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(224, 128, 157, 0.3)',
+  },
+
+  archiveBadgeText: {
+    color: '#E0809D',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+
+  countBadge: {
+    flexShrink: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+
+  countBadgeText: {
+    color: '#FFB703',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  title: {
+    width: '100%',
+    fontSize: 26,
+    lineHeight: 32,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+
+  /* LIST */
+  list: {
+    width: '100%',
+    paddingBottom: 24,
+  },
+
+  cardWrapper: {
+    width: '100%',
+    marginBottom: 14,
+  },
+
+  /* EMPTY */
+  emptyContainer: {
+    width: '100%',
+    paddingHorizontal: 24,
+    paddingVertical: 30,
+    borderWidth: 2,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+
+  emptyMessage: {
+    width: '100%',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+
+  /* ERROR */
   errorText: {
+    maxWidth: 340,
     fontSize: 15,
+    lineHeight: 21,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -210,115 +372,5 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontSize: 14,
     fontWeight: '700',
-  },
-
-  glowTopRight: {
-    position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    opacity: 0.15,
-  },
-
-  glowBottomLeft: {
-    position: 'absolute',
-    bottom: -60,
-    left: -60,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: '#7B2CBF',
-    opacity: 0.12,
-  },
-
-  /*
-   * paddingHorizontal 10: PixelGrid genişliğini
-   * (ekran genişliği - 20) olarak hesapladığı için
-   * kazanan çizim kart genişliğine tam oturuyor.
-   */
-  container: {
-    flex: 1,
-    paddingHorizontal: 10,
-    paddingTop: 20,
-  },
-
-  header: {
-    marginBottom: 16,
-    paddingHorizontal: 6,
-  },
-
-  headerTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-
-  archiveBadge: {
-    backgroundColor: 'rgba(224, 128, 157, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(224, 128, 157, 0.3)',
-  },
-
-  archiveBadgeText: {
-    color: '#E0809D',
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-  },
-
-  countBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-
-  countBadgeText: {
-    color: '#FFB703',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-
-  title: {
-    fontSize: 26,
-    fontWeight: '900',
-    letterSpacing: -0.5,
-  },
-
-  list: {
-    paddingBottom: 24,
-  },
-
-  emptyContainer: {
-    padding: 30,
-    borderWidth: 2,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 40,
-    marginHorizontal: 6,
-  },
-
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: 6,
-  },
-
-  emptyMessage: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
   },
 });

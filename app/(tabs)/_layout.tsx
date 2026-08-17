@@ -1,41 +1,39 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { StyleSheet } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { AntiqueColors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { CyberArcade } from '@/constants/theme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
-  const theme =
-    AntiqueColors[colorScheme === 'dark' ? 'dark' : 'light'];
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: theme.accent,
-        tabBarInactiveTintColor: theme.placeholder,
-
-        tabBarStyle: {
-          backgroundColor: theme.surface,
-          borderTopColor: theme.border,
-        },
-
         headerShown: false,
+
+        tabBarActiveTintColor: CyberArcade.magenta,
+        tabBarInactiveTintColor: CyberArcade.mutedText,
+
+        tabBarStyle: styles.tabBar,
+
+        tabBarLabelStyle: styles.tabBarLabel,
+
+        tabBarItemStyle: styles.tabBarItem,
+
         tabBarButton: HapticTab,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => (
+          title: 'Arena',
+          tabBarIcon: ({ color, focused }) => (
             <IconSymbol
-              size={28}
+              size={23}
               name="house.fill"
-              color={color}
+              color={focused ? CyberArcade.magenta : color}
+              weight={focused ? 'bold' : 'regular'}
             />
           ),
         }}
@@ -44,12 +42,13 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => (
+          title: 'Keşfet',
+          tabBarIcon: ({ color, focused }) => (
             <IconSymbol
-              size={28}
+              size={23}
               name="paperplane.fill"
-              color={color}
+              color={focused ? CyberArcade.mint : color}
+              weight={focused ? 'bold' : 'regular'}
             />
           ),
         }}
@@ -57,3 +56,37 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    height: 68,
+
+    backgroundColor: CyberArcade.surface,
+
+    borderTopWidth: 1,
+    borderTopColor: CyberArcade.border,
+
+    paddingTop: 7,
+    paddingBottom: 9,
+
+    elevation: 0,
+
+    shadowColor: CyberArcade.magenta,
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+  },
+
+  tabBarLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+  },
+
+  tabBarItem: {
+    paddingVertical: 2,
+  },
+});
