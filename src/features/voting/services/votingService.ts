@@ -1,9 +1,9 @@
 import {
-    doc,
-    getDoc,
-    increment,
-    runTransaction,
-    serverTimestamp,
+  doc,
+  getDoc,
+  increment,
+  runTransaction,
+  serverTimestamp,
 } from 'firebase/firestore';
 
 import { db } from '../../../services/firebase/firestore';
@@ -12,9 +12,6 @@ import { auth } from '../../auth/services/authServices';
 const VOTES_COLLECTION = 'votes';
 const SUBMISSIONS_COLLECTION = 'submissions';
 
-/**
- * Kullanıcının belirli bir submission'a daha önce oy verip vermediğini kontrol eder.
- */
 export const hasUserVoted = async (
   submissionId: string,
 ): Promise<boolean> => {
@@ -26,17 +23,17 @@ export const hasUserVoted = async (
 
   const voteId = `${submissionId}_${user.uid}`;
 
-  const voteRef = doc(db, VOTES_COLLECTION, voteId);
+  const voteRef = doc(
+    db,
+    VOTES_COLLECTION,
+    voteId,
+  );
+
   const voteSnapshot = await getDoc(voteRef);
 
   return voteSnapshot.exists();
 };
 
-/**
- * Submission'a oy verir.
- *
- * Aynı kullanıcı aynı submission'a yalnızca bir kez oy verebilir.
- */
 export const voteForSubmission = async (
   submissionId: string,
 ): Promise<void> => {
@@ -48,7 +45,11 @@ export const voteForSubmission = async (
 
   const voteId = `${submissionId}_${user.uid}`;
 
-  const voteRef = doc(db, VOTES_COLLECTION, voteId);
+  const voteRef = doc(
+    db,
+    VOTES_COLLECTION,
+    voteId,
+  );
 
   const submissionRef = doc(
     db,
@@ -58,24 +59,39 @@ export const voteForSubmission = async (
 
   await runTransaction(db, async (transaction) => {
     const voteSnapshot = await transaction.get(voteRef);
+
     const submissionSnapshot = await transaction.get(
       submissionRef,
     );
-
-    if (voteSnapshot.exists()) {
-      throw new Error('Bu çalışmaya zaten oy verdiniz.');
-    }
 
     if (!submissionSnapshot.exists()) {
       throw new Error('Gönderi bulunamadı.');
     }
 
+    const submission = submissionSnapshot.data();
+
+    // Kullanıcı kendi çizimine oy veremez.
+    if (submission.userId === user.uid) {
+      throw new Error(
+        'Kendi çiziminize oy veremezsiniz.',
+      );
+    }
+
+    // Aynı kullanıcı aynı çizime ikinci kez oy veremez.
+    if (voteSnapshot.exists()) {
+      throw new Error(
+        'Bu çalışmaya zaten oy verdiniz.',
+      );
+    }
+
+    // Oy kaydı oluştur.
     transaction.set(voteRef, {
       submissionId,
       userId: user.uid,
       createdAt: serverTimestamp(),
     });
 
+    // Submission'ın oy sayısını artır.
     transaction.update(submissionRef, {
       voteCount: increment(1),
     });

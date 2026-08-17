@@ -36,7 +36,7 @@ export default function HomeScreen() {
   };
 
   const handleArchivePress = (): void => {
-    Alert.alert('Arşiv', 'Arşiv ekranı hazırlanıyor.');
+    router.push('/archive');
   };
 
   return (

@@ -1,0 +1,5936 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.claude/
+  settings.json
+app/
+  (tabs)/
+    _layout.tsx
+    explore.tsx
+    index.tsx
+  archive/
+    index.tsx
+  auth/
+    layout.tsx
+    login.tsx
+    register.tsx
+  challenge/
+    index.tsx
+  editor/
+    index.tsx
+  submissions/
+    index.tsx
+  _layout.tsx
+  modal.tsx
+assets/
+  images/
+    android-icon-background.png
+    android-icon-foreground.png
+    android-icon-monochrome.png
+    favicon.png
+    icon.png
+    partial-react-logo.png
+    react-logo.png
+    react-logo@2x.png
+    react-logo@3x.png
+    splash-icon.png
+components/
+  ui/
+    collapsible.tsx
+    icon-symbol.ios.tsx
+    icon-symbol.tsx
+  external-link.tsx
+  haptic-tab.tsx
+  hello-wave.tsx
+  parallax-scroll-view.tsx
+  themed-text.tsx
+  themed-view.tsx
+constants/
+  theme.ts
+functions/
+  lib/
+    index.js
+  src/
+    index.tsx
+  package.json
+  tsconfig.json
+hooks/
+  use-color-scheme.ts
+  use-color-scheme.web.ts
+  use-theme-color.ts
+scripts/
+  reset-project.js
+src/
+  features/
+    archive/
+      components/
+        ArchiveCard.tsx
+      hooks/
+        useArchive.ts
+      screens/
+        ArchiveScreen.tsx
+      services/
+        archiveService.ts
+      types/
+        types.ts
+    auth/
+      hooks/
+        useAuth.ts
+      screens/
+        LoginScreen.tsx
+        RegisterScreen.tsx
+      services/
+        authServices.ts
+      types/
+        user.ts
+    challenges/
+      hooks/
+        useActiveChallenge.ts
+      screens/
+        ChallengeScreen.tsx
+      services/
+        challengeService.ts
+      types/
+        challenge.ts
+        submission.ts
+        vote.ts
+    editor/
+      components/
+        PixelGrid.tsx
+      hooks/
+        usePixelEditor.ts
+      screens/
+        PixelEditorScreen.tsx
+    submission/
+      components/
+        SubmissionCard.tsx
+      hooks/
+        useSubmission.ts
+      screens/
+        SubmissionListScreen.tsx
+        SubmissionsScreen.tsx
+      services/
+        submissionService.ts
+      types/
+        types.ts
+    voting/
+      components/
+        VoteButton.tsx
+      hooks/
+        useVoting.ts
+      services/
+        votingService.ts
+      types/
+        types.ts
+  services/
+    firebase/
+      firebaseConfig.ts
+      firestore.ts
+.env.example
+.firebaserc
+.gitignore
+AGENTS.md
+app.json
+CLAUDE.md
+eslint.config.js
+firebase.json
+firestore.indexes.json
+package.json
+tsconfig.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="app/archive/index.tsx">
+import { ArchiveScreen } from '@/src/features/archive/screens/ArchiveScreen';
+
+export default function ArchiveRoute() {
+  return <ArchiveScreen />;
+}
+</file>
+
+<file path="src/features/archive/components/ArchiveCard.tsx">
+import type { Timestamp } from 'firebase/firestore';
+import {
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
+} from 'react-native';
+
+import { AntiqueColors } from '@/constants/theme';
+import { PixelGrid } from '@/src/features/editor/components/PixelGrid';
+
+import type { ArchivedChallenge } from '../types/types';
+
+interface ArchiveCardProps {
+  archivedChallenge: ArchivedChallenge;
+}
+
+/*
+ * Tema koduna göre ikon/etiket.
+ * ChallengeScreen içindeki eşleştirmenin arşiv karşılığı; oradaki map
+ * export edilmediği ve o dosyaya dokunmamam gerektiği için burada
+ * ayrıca tutuluyor.
+ */
+const THEME_ICONS: Record<
+  string,
+  { icon: string; label: string }
+> = {
+  uzay_macerasi: { icon: '🚀', label: 'UZAY' },
+  cilgin_canlilar: { icon: '🐱', label: 'CANLILAR' },
+  masalsi_doga: { icon: '🍄', label: 'DOĞA' },
+  gece_acikmalari: { icon: '🍕', label: 'YEMEK' },
+  buyulu_dunyam: { icon: '🧙‍♂️', label: 'BÜYÜ' },
+  nostalji_atari: { icon: '🕹️', label: 'ATARİ' },
+  gelecegin_sehri: { icon: '🤖', label: 'CYBER' },
+  derin_okyanus: { icon: '🐙', label: 'OKYANUS' },
+  sevimli_canavarlar: { icon: '👾', label: 'CANAVAR' },
+  cilgin_araclar: { icon: '🏎️', label: 'ARAÇ' },
+  perili_gece: { icon: '👻', label: 'PERİLİ' },
+  sira_disi_meslekler: { icon: '👨‍🔬', label: 'MESLEK' },
+};
+
+const MONTHS_TR = [
+  'Ocak',
+  'Şubat',
+  'Mart',
+  'Nisan',
+  'Mayıs',
+  'Haziran',
+  'Temmuz',
+  'Ağustos',
+  'Eylül',
+  'Ekim',
+  'Kasım',
+  'Aralık',
+];
+
+/**
+ * Timestamp eski dokümanlarda eksik olabileceği için toDate()
+ * doğrudan çağrılmıyor. Okunamazsa null döner.
+ */
+const formatDate = (
+  value: Timestamp | null | undefined,
+): string | null => {
+  const date = value?.toDate?.();
+
+  if (!date) {
+    return null;
+  }
+
+  return `${date.getDate()} ${
+    MONTHS_TR[date.getMonth()]
+  } ${date.getFullYear()}`;
+};
+
+export const ArchiveCard = ({
+  archivedChallenge,
+}: ArchiveCardProps) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const baseTheme = AntiqueColors[isDark ? 'dark' : 'light'];
+
+  const theme = {
+    ...baseTheme,
+    pinkAccent: '#E0809D',
+    cardBg: isDark ? '#1A1625' : '#FFFFFF',
+    cardBorder: isDark ? '#2D223B' : '#F0E6ED',
+  };
+
+  const { challenge, winnerSubmission } = archivedChallenge;
+
+  const themeAsset = THEME_ICONS[challenge.theme] ?? {
+    icon: '🎨',
+    label: challenge.theme?.toUpperCase() ?? 'TEMA',
+  };
+
+  /*
+   * completedAt Cloud Function tarafından yazılıyor ama eski
+   * kayıtlarda olmayabilir; o durumda endsAt'e düşüyoruz.
+   */
+  const completedLabel =
+    formatDate(challenge.completedAt) ??
+    formatDate(challenge.endsAt);
+
+  return (
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.cardBg,
+          borderColor: theme.cardBorder,
+        },
+      ]}
+    >
+      {/* ÜST BİLGİ */}
+      <View style={styles.header}>
+        <View style={styles.headerTopRow}>
+          <View
+            style={[
+              styles.themeTag,
+              { backgroundColor: theme.pinkAccent },
+            ]}
+          >
+            <Text style={styles.themeTagText}>
+              {themeAsset.icon} {themeAsset.label}
+            </Text>
+          </View>
+
+          {completedLabel && (
+            <Text
+              style={[
+                styles.dateText,
+                { color: theme.placeholder },
+              ]}
+            >
+              {completedLabel}
+            </Text>
+          )}
+        </View>
+
+        <Text
+          style={[styles.title, { color: theme.text }]}
+        >
+          {challenge.title}
+        </Text>
+
+        {challenge.description && (
+          <Text
+            numberOfLines={2}
+            style={[
+              styles.description,
+              { color: theme.placeholder },
+            ]}
+          >
+            {challenge.description}
+          </Text>
+        )}
+      </View>
+
+      {/* KAZANAN ÇİZİM */}
+      {winnerSubmission ? (
+        <>
+          <View style={styles.winnerBanner}>
+            <Text
+              style={[
+                styles.winnerBannerText,
+                { color: theme.brass },
+              ]}
+            >
+              🏆 KAZANAN ÇİZİM
+            </Text>
+
+            <Text
+              style={[
+                styles.voteCountText,
+                { color: theme.pinkAccent },
+              ]}
+            >
+              {winnerSubmission.voteCount ?? 0} oy
+            </Text>
+          </View>
+
+          {/*
+            PixelGrid dokunma olaylarını yakalıyor; arşiv salt okunur
+            olduğu için pointerEvents="none" ile devre dışı bırakıyoruz.
+            Bu aynı zamanda listenin kaydırılmasını da engellemiyor.
+          */}
+          <View
+            pointerEvents="none"
+            style={styles.gridWrapper}
+          >
+            <PixelGrid
+              pixels={winnerSubmission.pixels}
+              resolution={winnerSubmission.resolution}
+              onPixelPress={() => {}}
+            />
+          </View>
+        </>
+      ) : (
+        <View
+          style={[
+            styles.noWinner,
+            { borderColor: theme.cardBorder },
+          ]}
+        >
+          <Text style={styles.noWinnerIcon}>🫥</Text>
+
+          <Text
+            style={[
+              styles.noWinnerTitle,
+              { color: theme.text },
+            ]}
+          >
+            Katılım Olmadı
+          </Text>
+
+          <Text
+            style={[
+              styles.noWinnerMessage,
+              { color: theme.placeholder },
+            ]}
+          >
+            Bu meydan okumaya hiç çizim gönderilmedi.
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  card: {
+    borderWidth: 1.5,
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 16,
+    paddingBottom: 14,
+  },
+
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 12,
+  },
+
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+
+  themeTag: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+
+  themeTagText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+
+  dateText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  title: {
+    fontSize: 20,
+    fontWeight: '900',
+    marginBottom: 6,
+  },
+
+  description: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '500',
+  },
+
+  winnerBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+  },
+
+  winnerBannerText: {
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+
+  voteCountText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+
+  /*
+   * Yatay padding yok: PixelGrid kendi genişliğini
+   * (ekran genişliği - 20) olarak hesaplıyor ve kart bu
+   * genişliğe tam oturuyor.
+   */
+  gridWrapper: {
+    alignItems: 'center',
+  },
+
+  noWinner: {
+    marginHorizontal: 16,
+    marginBottom: 4,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    borderWidth: 1.5,
+    borderRadius: 14,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+  },
+
+  noWinnerIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+
+  noWinnerTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+
+  noWinnerMessage: {
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+});
+</file>
+
+<file path="src/features/archive/hooks/useArchive.ts">
+import { useCallback, useEffect, useState } from 'react';
+
+import { getArchivedChallenges } from '../services/archiveService';
+import type { ArchivedChallenge } from '../types/types';
+
+interface UseArchiveResult {
+  archivedChallenges: ArchivedChallenge[];
+  loading: boolean;
+  error: string | null;
+  refresh: () => Promise<void>;
+}
+
+export const useArchive = (): UseArchiveResult => {
+  const [archivedChallenges, setArchivedChallenges] =
+    useState<ArchivedChallenge[]>([]);
+
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadArchive = useCallback(async (): Promise<void> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data = await getArchivedChallenges();
+
+      setArchivedChallenges(data);
+    } catch (err) {
+      console.error('Arşiv yüklenemedi:', err);
+
+      setError('Arşiv yüklenirken bir hata oluştu.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadArchive();
+  }, [loadArchive]);
+
+  return {
+    archivedChallenges,
+    loading,
+    error,
+    refresh: loadArchive,
+  };
+};
+</file>
+
+<file path="src/features/archive/screens/ArchiveScreen.tsx">
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
+} from 'react-native';
+
+import { AntiqueColors } from '@/constants/theme';
+
+import { ArchiveCard } from '../components/ArchiveCard';
+import { useArchive } from '../hooks/useArchive';
+
+export const ArchiveScreen = () => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const baseTheme = AntiqueColors[isDark ? 'dark' : 'light'];
+
+  const theme = {
+    ...baseTheme,
+    pinkAccent: '#E0809D',
+    cardBg: isDark ? '#1A1625' : '#FFFFFF',
+    cardBorder: isDark ? '#2D223B' : '#F0E6ED',
+  };
+
+  const { archivedChallenges, loading, error, refresh } =
+    useArchive();
+
+  /*
+   * Tam ekran spinner yalnızca ilk yüklemede.
+   * Sonraki yenilemeler listenin refresh control'ü ile gösteriliyor.
+   */
+  if (loading && archivedChallenges.length === 0) {
+    return (
+      <View
+        style={[
+          styles.center,
+          { backgroundColor: theme.background },
+        ]}
+      >
+        <ActivityIndicator
+          size="large"
+          color={theme.pinkAccent}
+        />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View
+        style={[
+          styles.center,
+          { backgroundColor: theme.background },
+        ]}
+      >
+        <Text
+          style={[
+            styles.errorText,
+            { color: theme.pinkAccent },
+          ]}
+        >
+          {error}
+        </Text>
+
+        <Pressable
+          onPress={refresh}
+          style={({ pressed }) => [
+            styles.retryButton,
+            {
+              borderColor: theme.pinkAccent,
+              opacity: pressed ? 0.7 : 1,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.retryButtonText,
+              { color: theme.text },
+            ]}
+          >
+            Tekrar Dene
+          </Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <View
+      style={[
+        styles.mainWrapper,
+        { backgroundColor: theme.background },
+      ]}
+    >
+      {/* ARKA PLAN AMBİYANS IŞIKLARI */}
+      <View
+        style={[
+          styles.glowTopRight,
+          { backgroundColor: theme.pinkAccent },
+        ]}
+      />
+      <View style={styles.glowBottomLeft} />
+
+      <View style={styles.container}>
+        {/* HEADER SECTION */}
+        <View style={styles.header}>
+          <View style={styles.headerTopRow}>
+            <View style={styles.archiveBadge}>
+              <Text style={styles.archiveBadgeText}>
+                🏆 GEÇMİŞ ŞAMPİYONLAR
+              </Text>
+            </View>
+
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>
+                {archivedChallenges.length} Arena
+              </Text>
+            </View>
+          </View>
+
+          <Text
+            style={[styles.title, { color: theme.text }]}
+          >
+            Pixel Art{' '}
+            <Text style={{ color: theme.pinkAccent }}>
+              Arşivi
+            </Text>
+          </Text>
+        </View>
+
+        {/* LİSTE VEYA BOŞ DURUM */}
+        {archivedChallenges.length === 0 ? (
+          <View
+            style={[
+              styles.emptyContainer,
+              {
+                backgroundColor: theme.cardBg,
+                borderColor: theme.cardBorder,
+              },
+            ]}
+          >
+            <Text style={styles.emptyIcon}>🗓️</Text>
+
+            <Text
+              style={[
+                styles.emptyTitle,
+                { color: theme.text },
+              ]}
+            >
+              Arşiv Henüz Boş
+            </Text>
+
+            <Text
+              style={[
+                styles.emptyMessage,
+                { color: theme.placeholder },
+              ]}
+            >
+              Tamamlanan ilk meydan okumadan sonra kazananlar
+              burada sergilenecek.
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={archivedChallenges}
+            keyExtractor={(item) => item.challenge.id}
+            renderItem={({ item }) => (
+              <ArchiveCard archivedChallenge={item} />
+            )}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            refreshing={loading}
+            onRefresh={refresh}
+          />
+        )}
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  mainWrapper: {
+    flex: 1,
+    position: 'relative',
+  },
+
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+
+  errorText: {
+    fontSize: 15,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+
+  retryButton: {
+    paddingVertical: 11,
+    paddingHorizontal: 22,
+    borderWidth: 1.5,
+    borderRadius: 12,
+  },
+
+  retryButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  glowTopRight: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    opacity: 0.15,
+  },
+
+  glowBottomLeft: {
+    position: 'absolute',
+    bottom: -60,
+    left: -60,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: '#7B2CBF',
+    opacity: 0.12,
+  },
+
+  /*
+   * paddingHorizontal 10: PixelGrid genişliğini
+   * (ekran genişliği - 20) olarak hesapladığı için
+   * kazanan çizim kart genişliğine tam oturuyor.
+   */
+  container: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingTop: 20,
+  },
+
+  header: {
+    marginBottom: 16,
+    paddingHorizontal: 6,
+  },
+
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+
+  archiveBadge: {
+    backgroundColor: 'rgba(224, 128, 157, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(224, 128, 157, 0.3)',
+  },
+
+  archiveBadgeText: {
+    color: '#E0809D',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+
+  countBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+
+  countBadgeText: {
+    color: '#FFB703',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  title: {
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+
+  list: {
+    paddingBottom: 24,
+  },
+
+  emptyContainer: {
+    padding: 30,
+    borderWidth: 2,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 40,
+    marginHorizontal: 6,
+  },
+
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+
+  emptyMessage: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+});
+</file>
+
+<file path="src/features/archive/services/archiveService.ts">
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  Timestamp,
+  where,
+} from 'firebase/firestore';
+
+import { db } from '@/src/services/firebase/firestore';
+
+import type { Challenge } from '@/src/features/challenges/types/challenge';
+import type { Submission } from '@/src/features/submission/types/types';
+import type { ArchivedChallenge } from '../types/types';
+
+const CHALLENGES_COLLECTION = 'challenges';
+const SUBMISSIONS_COLLECTION = 'submissions';
+
+/**
+ * Firestore Timestamp alanları eski dokümanlarda eksik olabilir,
+ * bu yüzden doğrudan toMillis() çağırmıyoruz.
+ */
+const toMillis = (
+  value: Timestamp | null | undefined,
+): number => value?.toMillis?.() ?? 0;
+
+/**
+ * Sıralama için challenge'ın tamamlanma zamanı.
+ * completedAt yoksa endsAt'e düşer.
+ */
+const getCompletionMillis = (
+  challenge: Challenge,
+): number =>
+  toMillis(challenge.completedAt) ||
+  toMillis(challenge.endsAt);
+
+/**
+ * Yalnızca status === 'completed' olan challenge'ları getirir.
+ * Aktif challenge bu sorguya hiç girmez.
+ *
+ * Sıralama bilinçli olarak client tarafında yapılıyor: böylece
+ * (status ASC, completedAt DESC) composite index'ine ihtiyaç kalmıyor.
+ * Aynı yaklaşım getSubmissionsByChallenge içinde de kullanılıyor.
+ */
+export const getCompletedChallenges = async (): Promise<
+  Challenge[]
+> => {
+  const completedChallengesQuery = query(
+    collection(db, CHALLENGES_COLLECTION),
+    where('status', '==', 'completed'),
+  );
+
+  const snapshot = await getDocs(completedChallengesQuery);
+
+  return snapshot.docs
+    .map(
+      (document) =>
+        ({
+          id: document.id,
+          ...document.data(),
+        }) as Challenge,
+    )
+    .sort(
+      (a, b) =>
+        getCompletionMillis(b) - getCompletionMillis(a),
+    );
+};
+
+/**
+ * Challenge'ın kazanan çizimini getirir.
+ *
+ * Hata fırlatmaz; kazanan okunamazsa null döner ki tek bir
+ * bozuk kayıt arşivin tamamını düşürmesin.
+ */
+const getWinnerSubmission = async (
+  challenge: Challenge,
+): Promise<Submission | null> => {
+  if (!challenge.winnerSubmissionId) {
+    return null;
+  }
+
+  try {
+    const submissionRef = doc(
+      db,
+      SUBMISSIONS_COLLECTION,
+      challenge.winnerSubmissionId,
+    );
+
+    const snapshot = await getDoc(submissionRef);
+
+    if (!snapshot.exists()) {
+      return null;
+    }
+
+    const submission = {
+      id: snapshot.id,
+      ...snapshot.data(),
+    } as Submission;
+
+    /*
+     * Kazanan çizim gerçekten bu challenge'a mı ait?
+     * Tutarsız veriye karşı koruma.
+     */
+    if (submission.challengeId !== challenge.id) {
+      console.warn(
+        'Kazanan submission farklı bir challenge’a ait, atlanıyor:',
+        {
+          challengeId: challenge.id,
+          submissionId: submission.id,
+          submissionChallengeId: submission.challengeId,
+        },
+      );
+
+      return null;
+    }
+
+    /*
+     * PixelGrid pixels dizisi ve resolution olmadan çizim yapamaz.
+     */
+    if (
+      !Array.isArray(submission.pixels) ||
+      submission.pixels.length === 0 ||
+      !submission.resolution
+    ) {
+      console.warn(
+        'Kazanan submission çizim verisi eksik, atlanıyor:',
+        submission.id,
+      );
+
+      return null;
+    }
+
+    return submission;
+  } catch (error) {
+    console.error(
+      'Kazanan submission alınamadı:',
+      challenge.winnerSubmissionId,
+      error,
+    );
+
+    return null;
+  }
+};
+
+/**
+ * Arşiv ekranının ihtiyaç duyduğu tüm veri:
+ * tamamlanmış challenge'lar + kazanan çizimleri.
+ */
+export const getArchivedChallenges = async (): Promise<
+  ArchivedChallenge[]
+> => {
+  const challenges = await getCompletedChallenges();
+
+  return Promise.all(
+    challenges.map(async (challenge) => ({
+      challenge,
+      winnerSubmission: await getWinnerSubmission(
+        challenge,
+      ),
+    })),
+  );
+};
+</file>
+
+<file path="src/features/archive/types/types.ts">
+import type { Challenge } from '@/src/features/challenges/types/challenge';
+import type { Submission } from '@/src/features/submission/types/types';
+
+/**
+ * Tamamlanmış bir challenge ve onun kazanan çizimi.
+ *
+ * winnerSubmission null olabilir:
+ *  - challenge'a hiç katılım olmadıysa (Cloud Function winnerSubmissionId'yi null bırakır),
+ *  - kazanan doküman silinmişse,
+ *  - kazanan doküman başka bir challenge'a aitse (tutarsız veri).
+ */
+export interface ArchivedChallenge {
+  challenge: Challenge;
+  winnerSubmission: Submission | null;
+}
+</file>
+
+<file path="firestore.indexes.json">
+{
+  "indexes": [
+    {
+      "collectionGroup": "challenges",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startsAt",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "endsAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "submissions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "challengeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "voteCount",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
+</file>
+
+<file path=".claude/settings.json">
+{
+  "enabledPlugins": {
+    "expo@claude-plugins-official": true
+  }
+}
+</file>
+
+<file path="app/auth/layout.tsx">
+import { Stack } from 'expo-router';
+
+export default function AuthLayout() {
+  return (
+    <Stack>
+      <Stack.Screen
+        name="login"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      <Stack.Screen
+        name="register"
+        options={{
+          headerShown: false,
+        }}
+      />
+    </Stack>
+  );
+}
+</file>
+
+<file path="app/auth/login.tsx">
+import { LoginScreen } from '../../src/features/auth/screens/LoginScreen';
+
+export default function Login() {
+  return <LoginScreen />;
+}
+</file>
+
+<file path="app/auth/register.tsx">
+import { RegisterScreen } from '../../src/features/auth/screens/RegisterScreen';
+
+export default function Register() {
+  return <RegisterScreen />;
+}
+</file>
+
+<file path="app/challenge/index.tsx">
+import { ChallengeScreen } from '@/src/features/challenges/screens/ChallengeScreen';
+
+export default function ChallengeRoute() {
+  return <ChallengeScreen />;
+}
+</file>
+
+<file path="app/submissions/index.tsx">
+import { useLocalSearchParams } from 'expo-router';
+
+import { SubmissionsScreen } from '@/src/features/submission/screens/SubmissionsScreen';
+
+export default function SubmissionsRoute() {
+  const { challengeId } = useLocalSearchParams<{
+    challengeId: string;
+  }>();
+
+  return <SubmissionsScreen challengeId={challengeId} />;
+}
+</file>
+
+<file path="app/modal.tsx">
+import { Link } from 'expo-router';
+import { StyleSheet } from 'react-native';
+
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+
+export default function ModalScreen() {
+  return (
+    <ThemedView style={styles.container}>
+      <ThemedText type="title">This is a modal</ThemedText>
+      <Link href="/" dismissTo style={styles.link}>
+        <ThemedText type="link">Go to home screen</ThemedText>
+      </Link>
+    </ThemedView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  link: {
+    marginTop: 15,
+    paddingVertical: 15,
+  },
+});
+</file>
+
+<file path="components/ui/collapsible.tsx">
+import { PropsWithChildren, useState } from 'react';
+import { StyleSheet, TouchableOpacity } from 'react-native';
+
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { AntiqueColors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
+export function Collapsible({
+  children,
+  title,
+}: PropsWithChildren & { title: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const theme = useColorScheme() ?? 'light';
+
+  return (
+    <ThemedView>
+      <TouchableOpacity
+        style={styles.heading}
+        onPress={() => setIsOpen((value) => !value)}
+        activeOpacity={0.8}
+      >
+        <IconSymbol
+          name="chevron.right"
+          size={18}
+          weight="medium"
+          color={
+            theme === 'light'
+              ? AntiqueColors.light.text
+              : AntiqueColors.dark.text
+          }
+          style={{
+            transform: [
+              { rotate: isOpen ? '90deg' : '0deg' },
+            ],
+          }}
+        />
+
+        <ThemedText type="defaultSemiBold">
+          {title}
+        </ThemedText>
+      </TouchableOpacity>
+
+      {isOpen && (
+        <ThemedView style={styles.content}>
+          {children}
+        </ThemedView>
+      )}
+    </ThemedView>
+  );
+}
+
+const styles = StyleSheet.create({
+  heading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  content: {
+    marginTop: 6,
+    marginLeft: 24,
+  },
+});
+</file>
+
+<file path="components/ui/icon-symbol.ios.tsx">
+import { SymbolView, SymbolViewProps, SymbolWeight } from 'expo-symbols';
+import { StyleProp, ViewStyle } from 'react-native';
+
+export function IconSymbol({
+  name,
+  size = 24,
+  color,
+  style,
+  weight = 'regular',
+}: {
+  name: SymbolViewProps['name'];
+  size?: number;
+  color: string;
+  style?: StyleProp<ViewStyle>;
+  weight?: SymbolWeight;
+}) {
+  return (
+    <SymbolView
+      weight={weight}
+      tintColor={color}
+      resizeMode="scaleAspectFit"
+      name={name}
+      style={[
+        {
+          width: size,
+          height: size,
+        },
+        style,
+      ]}
+    />
+  );
+}
+</file>
+
+<file path="components/ui/icon-symbol.tsx">
+// Fallback for using MaterialIcons on Android and web.
+
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
+import { ComponentProps } from 'react';
+import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
+
+type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
+type IconSymbolName = keyof typeof MAPPING;
+
+/**
+ * Add your SF Symbols to Material Icons mappings here.
+ * - see Material Icons in the [Icons Directory](https://icons.expo.fyi).
+ * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
+ */
+const MAPPING = {
+  'house.fill': 'home',
+  'paperplane.fill': 'send',
+  'chevron.left.forwardslash.chevron.right': 'code',
+  'chevron.right': 'chevron-right',
+} as IconMapping;
+
+/**
+ * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
+ * This ensures a consistent look across platforms, and optimal resource usage.
+ * Icon `name`s are based on SF Symbols and require manual mapping to Material Icons.
+ */
+export function IconSymbol({
+  name,
+  size = 24,
+  color,
+  style,
+}: {
+  name: IconSymbolName;
+  size?: number;
+  color: string | OpaqueColorValue;
+  style?: StyleProp<TextStyle>;
+  weight?: SymbolWeight;
+}) {
+  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+}
+</file>
+
+<file path="components/external-link.tsx">
+import { Href, Link } from 'expo-router';
+import { openBrowserAsync, WebBrowserPresentationStyle } from 'expo-web-browser';
+import { type ComponentProps } from 'react';
+
+type Props = Omit<ComponentProps<typeof Link>, 'href'> & { href: Href & string };
+
+export function ExternalLink({ href, ...rest }: Props) {
+  return (
+    <Link
+      target="_blank"
+      {...rest}
+      href={href}
+      onPress={async (event) => {
+        if (process.env.EXPO_OS !== 'web') {
+          // Prevent the default behavior of linking to the default browser on native.
+          event.preventDefault();
+          // Open the link in an in-app browser.
+          await openBrowserAsync(href, {
+            presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
+          });
+        }
+      }}
+    />
+  );
+}
+</file>
+
+<file path="components/haptic-tab.tsx">
+import { BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
+import { PlatformPressable } from '@react-navigation/elements';
+import * as Haptics from 'expo-haptics';
+
+export function HapticTab(props: BottomTabBarButtonProps) {
+  return (
+    <PlatformPressable
+      {...props}
+      onPressIn={(ev) => {
+        if (process.env.EXPO_OS === 'ios') {
+          // Add a soft haptic feedback when pressing down on the tabs.
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+        props.onPressIn?.(ev);
+      }}
+    />
+  );
+}
+</file>
+
+<file path="components/hello-wave.tsx">
+import Animated from 'react-native-reanimated';
+
+export function HelloWave() {
+  return (
+    <Animated.Text
+      style={{
+        fontSize: 28,
+        lineHeight: 32,
+        marginTop: -6,
+        animationName: {
+          '50%': { transform: [{ rotate: '25deg' }] },
+        },
+        animationIterationCount: 4,
+        animationDuration: '300ms',
+      }}>
+      👋
+    </Animated.Text>
+  );
+}
+</file>
+
+<file path="components/parallax-scroll-view.tsx">
+import type { PropsWithChildren, ReactElement } from 'react';
+import { StyleSheet } from 'react-native';
+import Animated, {
+  interpolate,
+  useAnimatedRef,
+  useAnimatedStyle,
+  useScrollOffset,
+} from 'react-native-reanimated';
+
+import { ThemedView } from '@/components/themed-view';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useThemeColor } from '@/hooks/use-theme-color';
+
+const HEADER_HEIGHT = 250;
+
+type Props = PropsWithChildren<{
+  headerImage: ReactElement;
+  headerBackgroundColor: { dark: string; light: string };
+}>;
+
+export default function ParallaxScrollView({
+  children,
+  headerImage,
+  headerBackgroundColor,
+}: Props) {
+  const backgroundColor = useThemeColor({}, 'background');
+  const colorScheme = useColorScheme() ?? 'light';
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const scrollOffset = useScrollOffset(scrollRef);
+  const headerAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: interpolate(
+            scrollOffset.value,
+            [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
+            [-HEADER_HEIGHT / 2, 0, HEADER_HEIGHT * 0.75]
+          ),
+        },
+        {
+          scale: interpolate(scrollOffset.value, [-HEADER_HEIGHT, 0, HEADER_HEIGHT], [2, 1, 1]),
+        },
+      ],
+    };
+  });
+
+  return (
+    <Animated.ScrollView
+      ref={scrollRef}
+      style={{ backgroundColor, flex: 1 }}
+      scrollEventThrottle={16}>
+      <Animated.View
+        style={[
+          styles.header,
+          { backgroundColor: headerBackgroundColor[colorScheme] },
+          headerAnimatedStyle,
+        ]}>
+        {headerImage}
+      </Animated.View>
+      <ThemedView style={styles.content}>{children}</ThemedView>
+    </Animated.ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    height: HEADER_HEIGHT,
+    overflow: 'hidden',
+  },
+  content: {
+    flex: 1,
+    padding: 32,
+    gap: 16,
+    overflow: 'hidden',
+  },
+});
+</file>
+
+<file path="components/themed-text.tsx">
+import { StyleSheet, Text, type TextProps } from 'react-native';
+
+import { useThemeColor } from '@/hooks/use-theme-color';
+
+export type ThemedTextProps = TextProps & {
+  lightColor?: string;
+  darkColor?: string;
+  type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
+};
+
+export function ThemedText({
+  style,
+  lightColor,
+  darkColor,
+  type = 'default',
+  ...rest
+}: ThemedTextProps) {
+  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+
+  return (
+    <Text
+      style={[
+        { color },
+        type === 'default' ? styles.default : undefined,
+        type === 'title' ? styles.title : undefined,
+        type === 'defaultSemiBold' ? styles.defaultSemiBold : undefined,
+        type === 'subtitle' ? styles.subtitle : undefined,
+        type === 'link' ? styles.link : undefined,
+        style,
+      ]}
+      {...rest}
+    />
+  );
+}
+
+const styles = StyleSheet.create({
+  default: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  defaultSemiBold: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '600',
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    lineHeight: 32,
+  },
+  subtitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  link: {
+    lineHeight: 30,
+    fontSize: 16,
+    color: '#0a7ea4',
+  },
+});
+</file>
+
+<file path="components/themed-view.tsx">
+import { View, type ViewProps } from 'react-native';
+
+import { useThemeColor } from '@/hooks/use-theme-color';
+
+export type ThemedViewProps = ViewProps & {
+  lightColor?: string;
+  darkColor?: string;
+};
+
+export function ThemedView({ style, lightColor, darkColor, ...otherProps }: ThemedViewProps) {
+  const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background');
+
+  return <View style={[{ backgroundColor }, style]} {...otherProps} />;
+}
+</file>
+
+<file path="functions/package.json">
+{
+  "name": "functions",
+  "scripts": {
+    "build": "tsc",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "private": true
+}
+</file>
+
+<file path="functions/tsconfig.json">
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "outDir": "lib",
+    "rootDir": "src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}
+</file>
+
+<file path="hooks/use-color-scheme.ts">
+export { useColorScheme } from 'react-native';
+</file>
+
+<file path="hooks/use-color-scheme.web.ts">
+import { useEffect, useState } from 'react';
+import { useColorScheme as useRNColorScheme } from 'react-native';
+
+/**
+ * To support static rendering, this value needs to be re-calculated on the client side for web
+ */
+export function useColorScheme() {
+  const [hasHydrated, setHasHydrated] = useState(false);
+
+  useEffect(() => {
+    setHasHydrated(true);
+  }, []);
+
+  const colorScheme = useRNColorScheme();
+
+  if (hasHydrated) {
+    return colorScheme;
+  }
+
+  return 'light';
+}
+</file>
+
+<file path="hooks/use-theme-color.ts">
+/**
+ * Learn more about light and dark modes:
+ * https://docs.expo.dev/guides/color-schemes/
+ */
+
+import { AntiqueColors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
+export function useThemeColor(
+  props: { light?: string; dark?: string },
+  colorName: keyof typeof AntiqueColors.light & keyof typeof AntiqueColors.dark
+) {
+  const theme = useColorScheme() ?? 'light';
+  const colorFromProps = props[theme];
+
+  if (colorFromProps) {
+    return colorFromProps;
+  } else {
+    return AntiqueColors[theme][colorName];
+  }
+}
+</file>
+
+<file path="scripts/reset-project.js">
+#!/usr/bin/env node
+
+/**
+ * This script is used to reset the project to a blank state.
+ * It deletes or moves the /app, /components, /hooks, /scripts, and /constants directories to /app-example based on user input and creates a new /app directory with an index.tsx and _layout.tsx file.
+ * You can remove the `reset-project` script from package.json and safely delete this file after running it.
+ */
+
+const fs = require("fs");
+const path = require("path");
+const readline = require("readline");
+
+const root = process.cwd();
+const oldDirs = ["app", "components", "hooks", "constants", "scripts"];
+const exampleDir = "app-example";
+const newAppDir = "app";
+const exampleDirPath = path.join(root, exampleDir);
+
+const indexContent = `import { Text, View } from "react-native";
+
+export default function Index() {
+  return (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Text>Edit app/index.tsx to edit this screen.</Text>
+    </View>
+  );
+}
+`;
+
+const layoutContent = `import { Stack } from "expo-router";
+
+export default function RootLayout() {
+  return <Stack />;
+}
+`;
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+const moveDirectories = async (userInput) => {
+  try {
+    if (userInput === "y") {
+      // Create the app-example directory
+      await fs.promises.mkdir(exampleDirPath, { recursive: true });
+      console.log(`📁 /${exampleDir} directory created.`);
+    }
+
+    // Move old directories to new app-example directory or delete them
+    for (const dir of oldDirs) {
+      const oldDirPath = path.join(root, dir);
+      if (fs.existsSync(oldDirPath)) {
+        if (userInput === "y") {
+          const newDirPath = path.join(root, exampleDir, dir);
+          await fs.promises.rename(oldDirPath, newDirPath);
+          console.log(`➡️ /${dir} moved to /${exampleDir}/${dir}.`);
+        } else {
+          await fs.promises.rm(oldDirPath, { recursive: true, force: true });
+          console.log(`❌ /${dir} deleted.`);
+        }
+      } else {
+        console.log(`➡️ /${dir} does not exist, skipping.`);
+      }
+    }
+
+    // Create new /app directory
+    const newAppDirPath = path.join(root, newAppDir);
+    await fs.promises.mkdir(newAppDirPath, { recursive: true });
+    console.log("\n📁 New /app directory created.");
+
+    // Create index.tsx
+    const indexPath = path.join(newAppDirPath, "index.tsx");
+    await fs.promises.writeFile(indexPath, indexContent);
+    console.log("📄 app/index.tsx created.");
+
+    // Create _layout.tsx
+    const layoutPath = path.join(newAppDirPath, "_layout.tsx");
+    await fs.promises.writeFile(layoutPath, layoutContent);
+    console.log("📄 app/_layout.tsx created.");
+
+    console.log("\n✅ Project reset complete. Next steps:");
+    console.log(
+      `1. Run \`npx expo start\` to start a development server.\n2. Edit app/index.tsx to edit the main screen.${
+        userInput === "y"
+          ? `\n3. Delete the /${exampleDir} directory when you're done referencing it.`
+          : ""
+      }`
+    );
+  } catch (error) {
+    console.error(`❌ Error during script execution: ${error.message}`);
+  }
+};
+
+rl.question(
+  "Do you want to move existing files to /app-example instead of deleting them? (Y/n): ",
+  (answer) => {
+    const userInput = answer.trim().toLowerCase() || "y";
+    if (userInput === "y" || userInput === "n") {
+      moveDirectories(userInput).finally(() => rl.close());
+    } else {
+      console.log("❌ Invalid input. Please enter 'Y' or 'N'.");
+      rl.close();
+    }
+  }
+);
+</file>
+
+<file path="src/features/auth/hooks/useAuth.ts">
+import {
+  onAuthStateChanged,
+  type User,
+} from 'firebase/auth';
+import { useEffect, useState } from 'react';
+
+import { auth } from '../services/authServices';
+
+interface AuthState {
+  user: User | null;
+  loading: boolean;
+}
+
+export const useAuth = (): AuthState => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, currentUser => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  return {
+    user,
+    loading,
+  };
+};
+</file>
+
+<file path="src/features/auth/types/user.ts">
+import type { Timestamp } from 'firebase/firestore';
+
+export interface UserProfile {
+  email: string;
+  createdAt: Timestamp;
+}
+</file>
+
+<file path="src/features/challenges/types/submission.ts">
+import type { Timestamp } from 'firebase/firestore';
+
+export interface Submission {
+  id: string;
+  userId: string;
+  challengeId: string;
+  pixels: string[];
+  voteCount: number;
+  createdAt: Timestamp;
+}
+</file>
+
+<file path="src/features/challenges/types/vote.ts">
+import type { Timestamp } from 'firebase/firestore';
+
+export interface Vote {
+  id: string;
+  userId: string;
+  submissionId: string;
+  challengeId: string;
+  createdAt: Timestamp;
+}
+</file>
+
+<file path="src/features/editor/hooks/usePixelEditor.ts">
+import { useCallback, useMemo, useState } from 'react';
+
+export type PixelResolution = 16 | 32;
+
+const DEFAULT_COLOR = '#FDFBF7';
+const DEFAULT_RESOLUTION: PixelResolution = 16;
+
+interface UsePixelEditorResult {
+  pixels: string[];
+  selectedColor: string;
+  resolution: PixelResolution;
+  setSelectedColor: (color: string) => void;
+  setResolution: (resolution: PixelResolution) => void;
+  paintPixel: (index: number) => void;
+  resetPixels: () => void;
+}
+
+const createEmptyGrid = (resolution: PixelResolution): string[] =>
+  Array.from(
+    { length: resolution * resolution },
+    () => DEFAULT_COLOR,
+  );
+
+export const usePixelEditor = (): UsePixelEditorResult => {
+  const [resolution, setResolution] =
+    useState<PixelResolution>(DEFAULT_RESOLUTION);
+
+  const [pixels, setPixels] = useState<string[]>(
+    createEmptyGrid(DEFAULT_RESOLUTION),
+  );
+
+  const [selectedColor, setSelectedColor] =
+    useState<string>('#3E2723');
+
+  const changeResolution = useCallback(
+    (newResolution: PixelResolution): void => {
+      setResolution(newResolution);
+      setPixels(createEmptyGrid(newResolution));
+    },
+    [],
+  );
+
+  const paintPixel = useCallback(
+    (index: number): void => {
+      setPixels((currentPixels) => {
+        const updatedPixels = [...currentPixels];
+
+        updatedPixels[index] = selectedColor;
+
+        return updatedPixels;
+      });
+    },
+    [selectedColor],
+  );
+
+  const resetPixels = useCallback((): void => {
+    setPixels(createEmptyGrid(resolution));
+  }, [resolution]);
+
+  return useMemo(
+    () => ({
+      pixels,
+      selectedColor,
+      resolution,
+      setSelectedColor,
+      setResolution: changeResolution,
+      paintPixel,
+      resetPixels,
+    }),
+    [
+      pixels,
+      selectedColor,
+      resolution,
+      changeResolution,
+      paintPixel,
+      resetPixels,
+    ],
+  );
+};
+</file>
+
+<file path="src/features/submission/hooks/useSubmission.ts">
+import { useCallback, useEffect, useState } from 'react';
+
+import {
+  getSubmissionsByChallenge,
+} from '../services/submissionService';
+
+import type { Submission } from '../types/types';
+
+interface UseSubmissionsResult {
+  submissions: Submission[];
+  loading: boolean;
+  error: string | null;
+  refresh: () => Promise<void>;
+}
+
+export const useSubmissions = (
+  challengeId: string,
+): UseSubmissionsResult => {
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadSubmissions = useCallback(async (): Promise<void> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data =
+        await getSubmissionsByChallenge(challengeId);
+
+      setSubmissions(data);
+    } catch (err) {
+      console.error('Submissionlar alınamadı:', err);
+
+      setError(
+        'Çalışmalar yüklenirken bir hata oluştu.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [challengeId]);
+
+  useEffect(() => {
+    loadSubmissions();
+  }, [loadSubmissions]);
+
+  return {
+    submissions,
+    loading,
+    error,
+    refresh: loadSubmissions,
+  };
+};
+</file>
+
+<file path="src/features/submission/services/submissionService.ts">
+import {
+  addDoc,
+  collection,
+  getDocs,
+  query,
+  serverTimestamp,
+  where,
+} from 'firebase/firestore';
+
+import { db } from '../../../services/firebase/firestore';
+import { auth } from '../../auth/services/authServices';
+
+import { limit } from 'firebase/firestore';
+import type {
+  CreateSubmissionData,
+  Submission,
+} from '../types/types';
+
+export const createSubmission = async (
+  data: CreateSubmissionData,
+): Promise<string> => {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error('Kullanıcı oturumu bulunamadı.');
+  }
+
+  // Kullanıcının bu challenge'a daha önce katılıp katılmadığını kontrol et
+  const existingSubmissionQuery = query(
+    collection(db, 'submissions'),
+    where('userId', '==', user.uid),
+    where('challengeId', '==', data.challengeId),
+    limit(1),
+  );
+
+  const existingSnapshot = await getDocs(
+    existingSubmissionQuery,
+  );
+
+  if (!existingSnapshot.empty) {
+    throw new Error(
+      'Bu challenge için zaten bir çizim gönderdiniz.',
+    );
+  }
+
+  const submissionRef = await addDoc(
+    collection(db, 'submissions'),
+    {
+      userId: user.uid,
+      challengeId: data.challengeId,
+      pixels: data.pixels,
+      resolution: data.resolution,
+      voteCount: 0,
+      createdAt: serverTimestamp(),
+    },
+  );
+
+  return submissionRef.id;
+};
+
+export const getSubmissionsByChallenge = async (
+  challengeId: string,
+): Promise<Submission[]> => {
+  const submissionsQuery = query(
+    collection(db, 'submissions'),
+    where('challengeId', '==', challengeId),
+  );
+
+  const snapshot = await getDocs(submissionsQuery);
+
+  return snapshot.docs
+    .map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }) as Submission) // <-- Burada Submission[] yerine tekil Submission kullanıyoruz
+    .sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() ?? 0;
+      const bTime = b.createdAt?.toMillis?.() ?? 0;
+
+      return bTime - aTime;
+    });
+};
+</file>
+
+<file path="src/features/submission/types/types.ts">
+import type { Timestamp } from 'firebase/firestore';
+
+import type { PixelResolution } from '@/src/features/editor/hooks/usePixelEditor';
+
+export interface Submission {
+  id: string;
+  userId: string;
+  challengeId: string;
+  pixels: string[];
+  resolution: PixelResolution;
+  voteCount: number;
+  createdAt: Timestamp;
+}
+
+export interface CreateSubmissionData {
+  challengeId: string;
+  pixels: string[];
+  resolution: PixelResolution;
+}
+</file>
+
+<file path="src/features/voting/components/VoteButton.tsx">
+import {
+    ActivityIndicator,
+    Pressable,
+    StyleSheet,
+    Text,
+    useColorScheme,
+} from 'react-native';
+
+import { AntiqueColors } from '@/constants/theme';
+
+import { useVoting } from '../hooks/useVoting';
+
+interface VoteButtonProps {
+  submissionId: string;
+}
+
+export const VoteButton = ({
+  submissionId,
+}: VoteButtonProps) => {
+  const colorScheme = useColorScheme();
+
+  const theme =
+    AntiqueColors[colorScheme === 'dark' ? 'dark' : 'light'];
+
+  const {
+    hasVoted,
+    loading,
+    voting,
+    error,
+    vote,
+  } = useVoting(submissionId);
+
+  if (loading) {
+    return (
+      <Pressable
+        disabled
+        style={[
+          styles.button,
+          {
+            backgroundColor: theme.border,
+          },
+        ]}
+      >
+        <ActivityIndicator
+          size="small"
+          color={theme.text}
+        />
+      </Pressable>
+    );
+  }
+
+  return (
+    <>
+      <Pressable
+        onPress={vote}
+        disabled={hasVoted || voting}
+        style={({ pressed }) => [
+          styles.button,
+          {
+            backgroundColor: hasVoted
+              ? theme.border
+              : theme.accent,
+            opacity:
+              hasVoted || voting
+                ? 0.7
+                : pressed
+                  ? 0.8
+                  : 1,
+          },
+        ]}
+      >
+        {voting ? (
+          <ActivityIndicator
+            size="small"
+            color={theme.background}
+          />
+        ) : (
+          <Text
+            style={[
+              styles.buttonText,
+              {
+                color: hasVoted
+                  ? theme.placeholder
+                  : theme.background,
+              },
+            ]}
+          >
+            {hasVoted ? '✓ Oy Verildi' : '♡ Oy Ver'}
+          </Text>
+        )}
+      </Pressable>
+
+      {error && (
+        <Text
+          style={[
+            styles.error,
+            { color: theme.danger },
+          ]}
+        >
+          {error}
+        </Text>
+      )}
+    </>
+  );
+};
+
+const styles = StyleSheet.create({
+  button: {
+    minWidth: 110,
+    minHeight: 42,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  buttonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  error: {
+    fontSize: 12,
+    marginTop: 6,
+    textAlign: 'center',
+  },
+});
+</file>
+
+<file path="src/features/voting/hooks/useVoting.ts">
+import { useCallback, useEffect, useState } from 'react';
+
+import {
+    hasUserVoted,
+    voteForSubmission,
+} from '../services/votingService';
+
+interface UseVotingResult {
+  hasVoted: boolean;
+  loading: boolean;
+  voting: boolean;
+  error: string | null;
+  vote: () => Promise<void>;
+}
+
+export const useVoting = (
+  submissionId: string,
+): UseVotingResult => {
+  const [hasVoted, setHasVoted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [voting, setVoting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const checkVoteStatus = useCallback(async (): Promise<void> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const voted = await hasUserVoted(submissionId);
+
+      setHasVoted(voted);
+    } catch (err) {
+      console.error('Oy durumu kontrol edilemedi:', err);
+
+      setError('Oy durumu kontrol edilemedi.');
+    } finally {
+      setLoading(false);
+    }
+  }, [submissionId]);
+
+  useEffect(() => {
+    checkVoteStatus();
+  }, [checkVoteStatus]);
+
+  const vote = async (): Promise<void> => {
+    if (hasVoted || voting) {
+      return;
+    }
+
+    try {
+      setVoting(true);
+      setError(null);
+
+      await voteForSubmission(submissionId);
+
+      setHasVoted(true);
+    } catch (err) {
+      console.error('Oy verilemedi:', err);
+
+      if (
+        err instanceof Error &&
+        err.message === 'Bu çalışmaya zaten oy verdiniz.'
+      ) {
+        setHasVoted(true);
+        setError(err.message);
+        return;
+      }
+
+      setError('Oy verilirken bir hata oluştu.');
+    } finally {
+      setVoting(false);
+    }
+  };
+
+  return {
+    hasVoted,
+    loading,
+    voting,
+    error,
+    vote,
+  };
+};
+</file>
+
+<file path="src/features/voting/services/votingService.ts">
+import {
+  doc,
+  getDoc,
+  increment,
+  runTransaction,
+  serverTimestamp,
+} from 'firebase/firestore';
+
+import { db } from '../../../services/firebase/firestore';
+import { auth } from '../../auth/services/authServices';
+
+const VOTES_COLLECTION = 'votes';
+const SUBMISSIONS_COLLECTION = 'submissions';
+
+export const hasUserVoted = async (
+  submissionId: string,
+): Promise<boolean> => {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error('Kullanıcı oturumu bulunamadı.');
+  }
+
+  const voteId = `${submissionId}_${user.uid}`;
+
+  const voteRef = doc(
+    db,
+    VOTES_COLLECTION,
+    voteId,
+  );
+
+  const voteSnapshot = await getDoc(voteRef);
+
+  return voteSnapshot.exists();
+};
+
+export const voteForSubmission = async (
+  submissionId: string,
+): Promise<void> => {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error('Kullanıcı oturumu bulunamadı.');
+  }
+
+  const voteId = `${submissionId}_${user.uid}`;
+
+  const voteRef = doc(
+    db,
+    VOTES_COLLECTION,
+    voteId,
+  );
+
+  const submissionRef = doc(
+    db,
+    SUBMISSIONS_COLLECTION,
+    submissionId,
+  );
+
+  await runTransaction(db, async (transaction) => {
+    const voteSnapshot = await transaction.get(voteRef);
+
+    const submissionSnapshot = await transaction.get(
+      submissionRef,
+    );
+
+    if (!submissionSnapshot.exists()) {
+      throw new Error('Gönderi bulunamadı.');
+    }
+
+    const submission = submissionSnapshot.data();
+
+    // Kullanıcı kendi çizimine oy veremez.
+    if (submission.userId === user.uid) {
+      throw new Error(
+        'Kendi çiziminize oy veremezsiniz.',
+      );
+    }
+
+    // Aynı kullanıcı aynı çizime ikinci kez oy veremez.
+    if (voteSnapshot.exists()) {
+      throw new Error(
+        'Bu çalışmaya zaten oy verdiniz.',
+      );
+    }
+
+    // Oy kaydı oluştur.
+    transaction.set(voteRef, {
+      submissionId,
+      userId: user.uid,
+      createdAt: serverTimestamp(),
+    });
+
+    // Submission'ın oy sayısını artır.
+    transaction.update(submissionRef, {
+      voteCount: increment(1),
+    });
+  });
+};
+</file>
+
+<file path="src/features/voting/types/types.ts">
+export interface Vote {
+  id: string;
+  submissionId: string;
+  userId: string;
+  createdAt: Date;
+}
+</file>
+
+<file path="src/services/firebase/firebaseConfig.ts">
+import { getApps, initializeApp } from 'firebase/app';
+
+const firebaseConfig = {
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+};
+
+export const firebaseApp =
+  getApps().length === 0
+    ? initializeApp(firebaseConfig)
+    : getApps()[0];
+</file>
+
+<file path="src/services/firebase/firestore.ts">
+import {
+  doc,
+  getFirestore,
+  serverTimestamp,
+  setDoc,
+} from 'firebase/firestore';
+
+import { firebaseApp } from './firebaseConfig';
+
+const db = getFirestore(firebaseApp);
+
+export const createUserProfile = async (
+  userId: string,
+  email: string,
+): Promise<void> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+
+    await setDoc(userRef, {
+      email,
+      createdAt: serverTimestamp(),
+    });
+    
+    console.log('✅ Firestore kullanıcı profili başarıyla oluşturuldu:', userId);
+  } catch (error) {
+    console.error('❌ Firestore createUserProfile Hatası:', error);
+    throw error; // Hatayı yukarı fırlat ki authService de bilsin
+  }
+};
+
+export { db };
+</file>
+
+<file path=".env.example">
+EXPO_PUBLIC_FIREBASE_API_KEY=
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+EXPO_PUBLIC_FIREBASE_APP_ID=
+</file>
+
+<file path=".firebaserc">
+{
+  "projects": {
+    "default": "pixel-art-challenge-a7f4d"
+  },
+  "targets": {},
+  "etags": {}
+}
+</file>
+
+<file path="AGENTS.md">
+# Expo HAS CHANGED
+
+Read the exact versioned docs at https://docs.expo.dev/versions/v54.0.0/ before writing any code.
+</file>
+
+<file path="app.json">
+{
+  "expo": {
+    "name": "pixel-art",
+    "slug": "pixel-art",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "pixelart",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
+</file>
+
+<file path="CLAUDE.md">
+@AGENTS.md
+</file>
+
+<file path="eslint.config.js">
+// https://docs.expo.dev/guides/using-eslint/
+const { defineConfig } = require('eslint/config');
+const expoConfig = require('eslint-config-expo/flat');
+
+module.exports = defineConfig([
+  expoConfig,
+  {
+    ignores: ['dist/*'],
+  },
+]);
+</file>
+
+<file path="firebase.json">
+{
+  "functions": {
+    "source": "functions"
+  },
+  "firestore": {
+    "indexes": "firestore.indexes.json"
+  }
+}
+</file>
+
+<file path="tsconfig.json">
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
+}
+</file>
+
+<file path="app/(tabs)/_layout.tsx">
+import { Tabs } from 'expo-router';
+import React from 'react';
+
+import { HapticTab } from '@/components/haptic-tab';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { AntiqueColors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
+export default function TabLayout() {
+  const colorScheme = useColorScheme();
+
+  const theme =
+    AntiqueColors[colorScheme === 'dark' ? 'dark' : 'light'];
+
+  return (
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: theme.accent,
+        tabBarInactiveTintColor: theme.placeholder,
+
+        tabBarStyle: {
+          backgroundColor: theme.surface,
+          borderTopColor: theme.border,
+        },
+
+        headerShown: false,
+        tabBarButton: HapticTab,
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color }) => (
+            <IconSymbol
+              size={28}
+              name="house.fill"
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="explore"
+        options={{
+          title: 'Explore',
+          tabBarIcon: ({ color }) => (
+            <IconSymbol
+              size={28}
+              name="paperplane.fill"
+              color={color}
+            />
+          ),
+        }}
+      />
+    </Tabs>
+  );
+}
+</file>
+
+<file path="app/(tabs)/explore.tsx">
+import { StyleSheet, Text, View } from 'react-native';
+
+import { AntiqueColors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
+export default function ExploreScreen() {
+  const colorScheme = useColorScheme();
+
+  const theme =
+    AntiqueColors[colorScheme === 'dark' ? 'dark' : 'light'];
+
+  return (
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.background },
+      ]}
+    >
+      <Text style={[styles.title, { color: theme.text }]}>
+        Keşfet
+      </Text>
+
+      <Text style={[styles.subtitle, { color: theme.placeholder }]}>
+        Yakında burada yeni içerikler olacak.
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+
+  subtitle: {
+    fontSize: 15,
+    textAlign: 'center',
+  },
+});
+</file>
+
+<file path="app/editor/index.tsx">
+import { useLocalSearchParams } from 'expo-router';
+
+import { PixelEditorScreen } from '@/src/features/editor/screens/PixelEditorScreen';
+
+export default function EditorRoute() {
+  const { challengeId } = useLocalSearchParams<{
+    challengeId: string;
+  }>();
+
+  return <PixelEditorScreen challengeId={challengeId} />;
+}
+</file>
+
+<file path="functions/lib/index.js">
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.manageChallenges = void 0;
+const app_1 = require("firebase-admin/app");
+const firestore_1 = require("firebase-admin/firestore");
+const scheduler_1 = require("firebase-functions/v2/scheduler");
+(0, app_1.initializeApp)();
+const db = (0, firestore_1.getFirestore)();
+const THEMES = [
+    {
+        theme: 'uzay_macerasi',
+        title: 'Uzay Macerası',
+        description: 'Uzayda kaybolan astronot kedi mi olur yoksa yürüyen pizza gezegeni mi? Galaksinin en çılgın pikselini fırlat! 🚀👽👾',
+    },
+    {
+        theme: 'cilgin_canlilar',
+        title: 'Çılgın Canlılar',
+        description: 'Kahve bağımlısı bir koala ya da kaslı bir tavuk! Doğanın en sevimli ama bir o kadar saçma canlısını çiziyoruz. 🐱🐰🐼',
+    },
+    {
+        theme: 'masalsi_doga',
+        title: 'Masalsı Doğa',
+        description: 'Alev atan dondurmalı dağlar mı yoksa dans eden mantarlar mı? Doğanın şirazesini biraz kaydırma vakti! 🌿🍄🌸',
+    },
+    {
+        theme: 'gece_acikmalari',
+        title: 'Gece Acıkmaları',
+        description: "Gece saat 3'te buzdolabını açtığında sana bakan o leziz dilim! Acıktıran, ağız sulandıran pikseller gelsin. 🍕🍟🍔",
+    },
+    {
+        theme: 'buyulu_dunyam',
+        title: 'Büyülü Dünyam',
+        description: 'Ejderhanın sırtında çay içen büyücü! Fantastik dünyaların kapısını arala, hayal gücünü serbest bırak. 🧙‍♂️🐉🦄',
+    },
+    {
+        theme: 'nostalji_atari',
+        title: 'Nostalji Atari',
+        description: "90'ların atari salonlarına geri dönüyoruz! Kaset üfleme günlerinin hatırına en nostaljik pikselini döktür. 🕹️🎮👾",
+    },
+    {
+        theme: 'gelecegin_sehri',
+        title: 'Geleceğin Şehri',
+        description: 'Neon ışıklar, uçan arabalar ve bilgisayar korsanı kediler! Geleceğin karanlık ama havalı dünyasını çiz. 🤖🕶️⚡',
+    },
+    {
+        theme: 'derin_okyanus',
+        title: 'Derin Okyanus',
+        description: 'Gözlük takmış bir köpekbalığı ya da denizaltında parti veren ahtapot! Okyanusun derinliklerine dalıyoruz. 🐙🦭🌊',
+    },
+    {
+        theme: 'sevimli_canavarlar',
+        title: 'Sevimli Canavarlar',
+        description: 'Yatağın altındaki o korkunç ama aslında sevilmek isteyen tatlı canavar! Korkutma, güldür! 👹👾🎃',
+    },
+    {
+        theme: 'cilgin_araclar',
+        title: 'Çılgın Araçlar',
+        description: 'Uçan kamyonet, roket motorlu bisiklet ya da dondurma arabası! Tekerleği yeniden icat etme vakti. 🏎️🚀🛵',
+    },
+    {
+        theme: 'perili_gece',
+        title: 'Perili Gece',
+        description: 'Kahvesini yudumlayan hayalet ve dans eden iskeletler! Gece yarısı perili ev partisine davetlisin. 👻💀🕯️',
+    },
+    {
+        theme: 'sira_disi_meslekler',
+        title: 'Sıra Dışı Meslekler',
+        description: 'Piksel dünyasının çılgın bilim insanı, ninja aşçısı ya da uzaylı polisi! Mesleğini piksellerle icra et. 👨‍🔬🕵️‍♂️👩‍🍳',
+    },
+];
+const CHALLENGE_DURATION_MS = 24 * 60 * 60 * 1000;
+exports.manageChallenges = (0, scheduler_1.onSchedule)({
+    schedule: 'every 5 minutes',
+    maxInstances: 1,
+}, async () => {
+    const now = new Date();
+    const nowTimestamp = firestore_1.Timestamp.fromDate(now);
+    try {
+        /*
+         * 1. Şu anda aktif challenge var mı?
+         */
+        const activeSnapshot = await db
+            .collection('challenges')
+            .where('status', '==', 'active')
+            .limit(1)
+            .get();
+        if (!activeSnapshot.empty) {
+            const activeChallenge = activeSnapshot.docs[0];
+            const data = activeChallenge.data();
+            const endsAt = data.endsAt.toDate();
+            /*
+             * Challenge'ın süresi henüz dolmadıysa
+             * yeni challenge oluşturma.
+             */
+            if (endsAt > now) {
+                console.log('Aktif challenge devam ediyor:', activeChallenge.id);
+                return;
+            }
+            /*
+             * 2. Challenge'ın süresi doldu.
+             * En yüksek oy alan submission'ı bul.
+             */
+            const submissionsSnapshot = await db
+                .collection('submissions')
+                .where('challengeId', '==', activeChallenge.id)
+                .orderBy('voteCount', 'desc')
+                .limit(1)
+                .get();
+            const winnerSubmissionId = submissionsSnapshot.empty
+                ? null
+                : submissionsSnapshot.docs[0].id;
+            /*
+             * 3. Challenge'ı tamamla ve kazananı kaydet.
+             */
+            await activeChallenge.ref.update({
+                status: 'completed',
+                completedAt: nowTimestamp,
+                winnerSubmissionId,
+            });
+            console.log('Challenge tamamlandı:', activeChallenge.id, 'Kazanan:', winnerSubmissionId ?? 'katılım olmadı');
+        }
+        /*
+         * 4. En son oluşturulan challenge'ın temasını bul.
+         * Aynı temanın arka arkaya gelmesini engelliyoruz.
+         */
+        const latestSnapshot = await db
+            .collection('challenges')
+            .orderBy('createdAt', 'desc')
+            .limit(1)
+            .get();
+        const previousTheme = latestSnapshot.empty
+            ? null
+            : latestSnapshot.docs[0].data().theme;
+        /*
+         * 5. Önceki challenge'ın temasını çıkar.
+         */
+        const availableThemes = THEMES.filter((item) => item.theme !== previousTheme);
+        /*
+         * 6. Rastgele yeni tema seç.
+         */
+        const selectedTheme = availableThemes[Math.floor(Math.random() * availableThemes.length)];
+        const startsAt = now;
+        const endsAt = new Date(now.getTime() + CHALLENGE_DURATION_MS);
+        /*
+         * 7. Yeni challenge oluştur.
+         */
+        const challengeRef = await db
+            .collection('challenges')
+            .add({
+            title: selectedTheme.title,
+            theme: selectedTheme.theme,
+            description: selectedTheme.description,
+            status: 'active',
+            startsAt: firestore_1.Timestamp.fromDate(startsAt),
+            endsAt: firestore_1.Timestamp.fromDate(endsAt),
+            winnerSubmissionId: null,
+            createdAt: nowTimestamp,
+            completedAt: null,
+        });
+        console.log('Yeni challenge oluşturuldu:', challengeRef.id, selectedTheme.theme);
+    }
+    catch (error) {
+        console.error('manageChallenges fonksiyonunda hata:', error);
+    }
+});
+</file>
+
+<file path="functions/src/index.tsx">
+import { initializeApp } from 'firebase-admin/app';
+import {
+  getFirestore,
+  Timestamp,
+} from 'firebase-admin/firestore';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+
+initializeApp();
+
+const db = getFirestore();
+
+interface ChallengeDoc {
+  title: string;
+  theme: string;
+  description: string;
+  status: 'active' | 'completed';
+  startsAt: Timestamp;
+  endsAt: Timestamp;
+  winnerSubmissionId: string | null;
+  createdAt: Timestamp;
+  completedAt: Timestamp | null;
+}
+
+const THEMES = [
+  {
+    theme: 'uzay_macerasi',
+    title: 'Uzay Macerası',
+    description:
+      'Uzayda kaybolan astronot kedi mi olur yoksa yürüyen pizza gezegeni mi? Galaksinin en çılgın pikselini fırlat! 🚀👽👾',
+  },
+  {
+    theme: 'cilgin_canlilar',
+    title: 'Çılgın Canlılar',
+    description:
+      'Kahve bağımlısı bir koala ya da kaslı bir tavuk! Doğanın en sevimli ama bir o kadar saçma canlısını çiziyoruz. 🐱🐰🐼',
+  },
+  {
+    theme: 'masalsi_doga',
+    title: 'Masalsı Doğa',
+    description:
+      'Alev atan dondurmalı dağlar mı yoksa dans eden mantarlar mı? Doğanın şirazesini biraz kaydırma vakti! 🌿🍄🌸',
+  },
+  {
+    theme: 'gece_acikmalari',
+    title: 'Gece Acıkmaları',
+    description:
+      "Gece saat 3'te buzdolabını açtığında sana bakan o leziz dilim! Acıktıran, ağız sulandıran pikseller gelsin. 🍕🍟🍔",
+  },
+  {
+    theme: 'buyulu_dunyam',
+    title: 'Büyülü Dünyam',
+    description:
+      'Ejderhanın sırtında çay içen büyücü! Fantastik dünyaların kapısını arala, hayal gücünü serbest bırak. 🧙‍♂️🐉🦄',
+  },
+  {
+    theme: 'nostalji_atari',
+    title: 'Nostalji Atari',
+    description:
+      "90'ların atari salonlarına geri dönüyoruz! Kaset üfleme günlerinin hatırına en nostaljik pikselini döktür. 🕹️🎮👾",
+  },
+  {
+    theme: 'gelecegin_sehri',
+    title: 'Geleceğin Şehri',
+    description:
+      'Neon ışıklar, uçan arabalar ve bilgisayar korsanı kediler! Geleceğin karanlık ama havalı dünyasını çiz. 🤖🕶️⚡',
+  },
+  {
+    theme: 'derin_okyanus',
+    title: 'Derin Okyanus',
+    description:
+      'Gözlük takmış bir köpekbalığı ya da denizaltında parti veren ahtapot! Okyanusun derinliklerine dalıyoruz. 🐙🦭🌊',
+  },
+  {
+    theme: 'sevimli_canavarlar',
+    title: 'Sevimli Canavarlar',
+    description:
+      'Yatağın altındaki o korkunç ama aslında sevilmek isteyen tatlı canavar! Korkutma, güldür! 👹👾🎃',
+  },
+  {
+    theme: 'cilgin_araclar',
+    title: 'Çılgın Araçlar',
+    description:
+      'Uçan kamyonet, roket motorlu bisiklet ya da dondurma arabası! Tekerleği yeniden icat etme vakti. 🏎️🚀🛵',
+  },
+  {
+    theme: 'perili_gece',
+    title: 'Perili Gece',
+    description:
+      'Kahvesini yudumlayan hayalet ve dans eden iskeletler! Gece yarısı perili ev partisine davetlisin. 👻💀🕯️',
+  },
+  {
+    theme: 'sira_disi_meslekler',
+    title: 'Sıra Dışı Meslekler',
+    description:
+      'Piksel dünyasının çılgın bilim insanı, ninja aşçısı ya da uzaylı polisi! Mesleğini piksellerle icra et. 👨‍🔬🕵️‍♂️👩‍🍳',
+  },
+];
+
+const CHALLENGE_DURATION_MS = 24 * 60 * 60 * 1000;
+
+export const manageChallenges = onSchedule(
+  {
+    schedule: 'every 5 minutes',
+    maxInstances: 1,
+  },
+  async () => {
+    const now = new Date();
+    const nowTimestamp = Timestamp.fromDate(now);
+
+    try {
+      /*
+       * 1. Şu anda aktif challenge var mı?
+       */
+      const activeSnapshot = await db
+        .collection('challenges')
+        .where('status', '==', 'active')
+        .limit(1)
+        .get();
+
+      if (!activeSnapshot.empty) {
+        const activeChallenge = activeSnapshot.docs[0];
+        const data = activeChallenge.data() as ChallengeDoc;
+
+        const endsAt = data.endsAt.toDate();
+
+        /*
+         * Challenge'ın süresi henüz dolmadıysa
+         * yeni challenge oluşturma.
+         */
+        if (endsAt > now) {
+          console.log(
+            'Aktif challenge devam ediyor:',
+            activeChallenge.id,
+          );
+
+          return;
+        }
+
+        /*
+         * 2. Challenge'ın süresi doldu.
+         * En yüksek oy alan submission'ı bul.
+         */
+        const submissionsSnapshot = await db
+          .collection('submissions')
+          .where(
+            'challengeId',
+            '==',
+            activeChallenge.id,
+          )
+          .orderBy('voteCount', 'desc')
+          .limit(1)
+          .get();
+
+        const winnerSubmissionId =
+          submissionsSnapshot.empty
+            ? null
+            : submissionsSnapshot.docs[0].id;
+
+        /*
+         * 3. Challenge'ı tamamla ve kazananı kaydet.
+         */
+        await activeChallenge.ref.update({
+          status: 'completed',
+          completedAt: nowTimestamp,
+          winnerSubmissionId,
+        });
+
+        console.log(
+          'Challenge tamamlandı:',
+          activeChallenge.id,
+          'Kazanan:',
+          winnerSubmissionId ?? 'katılım olmadı',
+        );
+      }
+
+      /*
+       * 4. En son oluşturulan challenge'ın temasını bul.
+       * Aynı temanın arka arkaya gelmesini engelliyoruz.
+       */
+      const latestSnapshot = await db
+        .collection('challenges')
+        .orderBy('createdAt', 'desc')
+        .limit(1)
+        .get();
+
+      const previousTheme = latestSnapshot.empty
+        ? null
+        : (
+            latestSnapshot.docs[0].data() as ChallengeDoc
+          ).theme;
+
+      /*
+       * 5. Önceki challenge'ın temasını çıkar.
+       */
+      const availableThemes = THEMES.filter(
+        (item) => item.theme !== previousTheme,
+      );
+
+      /*
+       * 6. Rastgele yeni tema seç.
+       */
+      const selectedTheme =
+        availableThemes[
+          Math.floor(
+            Math.random() * availableThemes.length,
+          )
+        ];
+
+      const startsAt = now;
+      const endsAt = new Date(
+        now.getTime() + CHALLENGE_DURATION_MS,
+      );
+
+      /*
+       * 7. Yeni challenge oluştur.
+       */
+      const challengeRef = await db
+        .collection('challenges')
+        .add({
+          title: selectedTheme.title,
+          theme: selectedTheme.theme,
+          description: selectedTheme.description,
+          status: 'active',
+          startsAt: Timestamp.fromDate(startsAt),
+          endsAt: Timestamp.fromDate(endsAt),
+          winnerSubmissionId: null,
+          createdAt: nowTimestamp,
+          completedAt: null,
+        });
+
+      console.log(
+        'Yeni challenge oluşturuldu:',
+        challengeRef.id,
+        selectedTheme.theme,
+      );
+    } catch (error) {
+      console.error(
+        'manageChallenges fonksiyonunda hata:',
+        error,
+      );
+    }
+  },
+);
+</file>
+
+<file path="src/features/auth/services/authServices.ts">
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+} from 'firebase/auth';
+
+import { firebaseApp } from '../../../services/firebase/firebaseConfig';
+import { createUserProfile } from '../../../services/firebase/firestore';
+
+const auth = getAuth(firebaseApp);
+
+export const registerUser = async (
+  email: string,
+  password: string,
+): Promise<void> => {
+  const credential = await createUserWithEmailAndPassword(
+    auth,
+    email,
+    password,
+  );
+
+  await createUserProfile(
+    credential.user.uid,
+    credential.user.email ?? email,
+  );
+};
+
+export const loginUser = async (
+  email: string,
+  password: string,
+): Promise<void> => {
+  await signInWithEmailAndPassword(auth, email, password);
+};
+
+export const logoutUser = async (): Promise<void> => {
+  await signOut(auth);
+};
+
+export { auth };
+</file>
+
+<file path="src/features/challenges/hooks/useActiveChallenge.ts">
+import { useCallback, useEffect, useState } from 'react';
+
+import { getActiveChallenge } from '../services/challengeService';
+import type { Challenge } from '../types/challenge';
+
+interface UseActiveChallengeResult {
+  challenge: Challenge | null;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export const useActiveChallenge =
+  (): UseActiveChallengeResult => {
+    const [challenge, setChallenge] =
+      useState<Challenge | null>(null);
+
+    const [loading, setLoading] =
+      useState<boolean>(true);
+
+    const [error, setError] =
+      useState<string | null>(null);
+
+    const fetchChallenge = useCallback(
+      async (): Promise<void> => {
+        try {
+          setLoading(true);
+          setError(null);
+
+          const activeChallenge =
+            await getActiveChallenge();
+
+          setChallenge(activeChallenge);
+        } catch (error) {
+          console.error(
+            'Aktif challenge yüklenirken hata:',
+            error,
+          );
+
+          setError(
+            'Aktif challenge yüklenirken bir hata oluştu.',
+          );
+        } finally {
+          setLoading(false);
+        }
+      },
+      [],
+    );
+
+    useEffect(() => {
+      void fetchChallenge();
+    }, [fetchChallenge]);
+
+    return {
+      challenge,
+      loading,
+      error,
+      refetch: fetchChallenge,
+    };
+  };
+</file>
+
+<file path="src/features/challenges/services/challengeService.ts">
+import {
+  collection,
+  getDocs,
+  limit,
+  query,
+  Timestamp,
+  where,
+} from 'firebase/firestore';
+
+import { db } from '@/src/services/firebase/firestore';
+import type { Challenge } from '../types/challenge';
+
+const challengesCollection = collection(db, 'challenges');
+
+export const getActiveChallenge =
+  async (): Promise<Challenge | null> => {
+    const now = Timestamp.now();
+
+    const activeChallengeQuery = query(
+      challengesCollection,
+      where('status', '==', 'active'),
+      where('startsAt', '<=', now),
+      where('endsAt', '>', now),
+      limit(1),
+    );
+
+    const snapshot = await getDocs(activeChallengeQuery);
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    const document = snapshot.docs[0];
+
+    return {
+      id: document.id,
+      ...document.data(),
+    } as Challenge;
+  };
+</file>
+
+<file path="src/features/editor/components/PixelGrid.tsx">
+import { useRef } from 'react';
+import {
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from 'react-native';
+
+interface PixelGridProps {
+  pixels: string[];
+  resolution: number;
+  onPixelPress: (index: number) => void;
+}
+
+const MAX_GRID_SIZE = 430;
+const HORIZONTAL_PADDING = 20;
+
+export const PixelGrid = ({
+  pixels,
+  resolution,
+  onPixelPress,
+}: PixelGridProps) => {
+  const { width } = useWindowDimensions();
+
+  const gridSize = Math.min(
+    width - HORIZONTAL_PADDING,
+    MAX_GRID_SIZE,
+  );
+
+  const pixelSize = gridSize / resolution;
+
+  const lastPixelRef = useRef<number | null>(null);
+
+  const getPixelIndex = (
+    locationX: number,
+    locationY: number,
+  ): number | null => {
+    const column = Math.floor(locationX / pixelSize);
+    const row = Math.floor(locationY / pixelSize);
+
+    if (
+      column < 0 ||
+      column >= resolution ||
+      row < 0 ||
+      row >= resolution
+    ) {
+      return null;
+    }
+
+    return row * resolution + column;
+  };
+
+  const paintLine = (
+    startIndex: number,
+    endIndex: number,
+  ): void => {
+    const startRow = Math.floor(startIndex / resolution);
+    const startColumn = startIndex % resolution;
+
+    const endRow = Math.floor(endIndex / resolution);
+    const endColumn = endIndex % resolution;
+
+    const deltaColumn = endColumn - startColumn;
+    const deltaRow = endRow - startRow;
+
+    const steps = Math.max(
+      Math.abs(deltaColumn),
+      Math.abs(deltaRow),
+    );
+
+    for (let step = 0; step <= steps; step += 1) {
+      const progress = steps === 0 ? 0 : step / steps;
+
+      const column = Math.round(
+        startColumn + deltaColumn * progress,
+      );
+
+      const row = Math.round(
+        startRow + deltaRow * progress,
+      );
+
+      const index = row * resolution + column;
+
+      onPixelPress(index);
+    }
+  };
+
+  const paintFromTouch = (
+    locationX: number,
+    locationY: number,
+  ): void => {
+    const currentIndex = getPixelIndex(
+      locationX,
+      locationY,
+    );
+
+    if (currentIndex === null) {
+      return;
+    }
+
+    const previousIndex = lastPixelRef.current;
+
+    if (
+      previousIndex !== null &&
+      previousIndex !== currentIndex
+    ) {
+      paintLine(previousIndex, currentIndex);
+    } else {
+      onPixelPress(currentIndex);
+    }
+
+    lastPixelRef.current = currentIndex;
+  };
+
+  const handleTouchStart = (
+    locationX: number,
+    locationY: number,
+  ): void => {
+    lastPixelRef.current = null;
+
+    paintFromTouch(locationX, locationY);
+  };
+
+  const handleTouchEnd = (): void => {
+    lastPixelRef.current = null;
+  };
+
+  return (
+    <View
+      style={[
+        styles.grid,
+        {
+          width: gridSize,
+          height: gridSize,
+          borderRadius: resolution === 16 ? 12 : 8,
+        },
+      ]}
+      onStartShouldSetResponderCapture={() => true}
+      onMoveShouldSetResponderCapture={() => true}
+      onResponderGrant={(event) => {
+        handleTouchStart(
+          event.nativeEvent.locationX,
+          event.nativeEvent.locationY,
+        );
+      }}
+      onResponderMove={(event) => {
+        paintFromTouch(
+          event.nativeEvent.locationX,
+          event.nativeEvent.locationY,
+        );
+      }}
+      onResponderRelease={handleTouchEnd}
+      onResponderTerminate={handleTouchEnd}
+    >
+      {pixels.map((color, index) => (
+        <View
+          key={index}
+          pointerEvents="none"
+          style={{
+            width: pixelSize,
+            height: pixelSize,
+            backgroundColor: color,
+            borderWidth: resolution === 16 ? 0.45 : 0.3,
+            borderColor: 'rgba(90, 75, 65, 0.18)',
+            borderRadius: resolution === 16 ? 1.5 : 1,
+          }}
+        />
+      ))}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    overflow: 'hidden',
+    backgroundColor: '#FDFBF7',
+
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+});
+</file>
+
+<file path="src/features/submission/screens/SubmissionListScreen.tsx">
+import { AntiqueColors } from '@/constants/theme';
+import React from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
+} from 'react-native';
+
+import { SubmissionCard } from '../components/SubmissionCard';
+import { useSubmissions } from '../hooks/useSubmission';
+
+interface SubmissionListScreenProps {
+  challengeId: string;
+}
+
+export const SubmissionListScreen = ({
+  challengeId,
+}: SubmissionListScreenProps) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const baseTheme = AntiqueColors[isDark ? 'dark' : 'light'];
+
+  const theme = {
+    ...baseTheme,
+    pinkAccent: '#E0809D',
+    cardBg: isDark ? '#1A1625' : '#FFFFFF',
+    cardBorder: isDark ? '#2D223B' : '#F0E6ED',
+  };
+
+  const { submissions, loading, error } = useSubmissions(challengeId);
+
+  if (loading) {
+    return (
+      <View style={[styles.center, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.pinkAccent} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.center, { backgroundColor: theme.background }]}>
+        <Text style={[styles.message, { color: theme.pinkAccent }]}>
+          {error}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.mainWrapper, { backgroundColor: theme.background }]}>
+      {/* ARKA PLAN AMBİYANS IŞIKLARI */}
+      <View
+        style={[styles.glowTopRight, { backgroundColor: theme.pinkAccent }]}
+      />
+      <View style={styles.glowBottomLeft} />
+
+      <View style={styles.container}>
+        {/* HEADER SECTION */}
+        <View style={styles.header}>
+          <View style={styles.headerTopRow}>
+            <View style={styles.galleryBadge}>
+              <Text style={styles.galleryBadgeText}>🖼️ TOPLULUK GALERİSİ</Text>
+            </View>
+
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>
+                {submissions.length} Çizim
+              </Text>
+            </View>
+          </View>
+
+          <Text style={[styles.title, { color: theme.text }]}>
+            Pixel Art <Text style={{ color: theme.pinkAccent }}>Sergisi</Text>
+          </Text>
+        </View>
+
+        {/* LİSTE VEYA BOŞ DURUM */}
+        {submissions.length === 0 ? (
+          <View
+            style={[
+              styles.emptyContainer,
+              {
+                backgroundColor: theme.cardBg,
+                borderColor: theme.cardBorder,
+              },
+            ]}
+          >
+            <Text style={styles.emptyIcon}>🎨</Text>
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>
+              Henüz Çizim Yok
+            </Text>
+            <Text
+              style={[styles.emptyMessage, { color: theme.placeholder }]}
+            >
+              Bu challenge için ilk piksel sanatı eserini sen oluştur ve sergile!
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={submissions}
+            keyExtractor={(item) => item.id}
+            numColumns={2} // Yan yana 2 sütunlu izgara görünümü
+            columnWrapperStyle={styles.columnWrapper}
+            renderItem={({ item }) => (
+              <View style={styles.cardWrapper}>
+                <SubmissionCard submission={item} />
+              </View>
+            )}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  mainWrapper: {
+    flex: 1,
+    position: 'relative',
+  },
+
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+
+  /* Glow Efektleri */
+  glowTopRight: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    opacity: 0.15,
+  },
+
+  glowBottomLeft: {
+    position: 'absolute',
+    bottom: -60,
+    left: -60,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: '#7B2CBF',
+    opacity: 0.12,
+  },
+
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 20,
+  },
+
+  header: {
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+
+  galleryBadge: {
+    backgroundColor: 'rgba(224, 128, 157, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(224, 128, 157, 0.3)',
+  },
+
+  galleryBadgeText: {
+    color: '#E0809D',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+
+  countBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+
+  countBadgeText: {
+    color: '#FFB703',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  title: {
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+
+  list: {
+    paddingBottom: 24,
+  },
+
+  columnWrapper: {
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+
+  cardWrapper: {
+    width: '48.5%', // 2 sütunlu simetrik yerleşim
+  },
+
+  /* Empty State Styles */
+  emptyContainer: {
+    padding: 30,
+    borderWidth: 2,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 40,
+  },
+
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+
+  emptyMessage: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+
+  message: {
+    fontSize: 15,
+    textAlign: 'center',
+  },
+});
+</file>
+
+<file path="src/features/submission/screens/SubmissionsScreen.tsx">
+import { AntiqueColors } from '@/constants/theme';
+import React from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
+} from 'react-native';
+
+import { SubmissionCard } from '../components/SubmissionCard';
+import { useSubmissions } from '../hooks/useSubmission';
+
+interface SubmissionsScreenProps {
+  challengeId: string;
+}
+
+export const SubmissionsScreen = ({
+  challengeId,
+}: SubmissionsScreenProps) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const baseTheme = AntiqueColors[isDark ? 'dark' : 'light'];
+
+  const theme = {
+    ...baseTheme,
+    pinkAccent: '#E0809D',
+    cardBg: isDark ? '#1A1625' : '#FFFFFF',
+    cardBorder: isDark ? '#2D223B' : '#F0E6ED',
+  };
+
+  const { submissions, loading, error } = useSubmissions(challengeId);
+
+  if (loading) {
+    return (
+      <View style={[styles.center, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.pinkAccent} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.center, { backgroundColor: theme.background }]}>
+        <Text style={{ color: theme.pinkAccent, fontSize: 15 }}>
+          {error}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.mainWrapper, { backgroundColor: theme.background }]}>
+      {/* ARKA PLAN AMBİYANS IŞIKLARI */}
+      <View
+        style={[styles.glowTopRight, { backgroundColor: theme.pinkAccent }]}
+      />
+      <View style={styles.glowBottomLeft} />
+
+      <View style={styles.container}>
+        {/* HEADER SECTION */}
+        <View style={styles.header}>
+          <View style={styles.headerTopRow}>
+            <View style={styles.galleryBadge}>
+              <Text style={styles.galleryBadgeText}>🖼️ TOPLULUK GALERİSİ</Text>
+            </View>
+
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>
+                {submissions.length} Çizim
+              </Text>
+            </View>
+          </View>
+
+          <Text style={[styles.title, { color: theme.text }]}>
+            Pixel Art <Text style={{ color: theme.pinkAccent }}>Sergisi</Text>
+          </Text>
+        </View>
+
+        {/* LİSTE VEYA BOŞ DURUM */}
+        {submissions.length === 0 ? (
+          <View
+            style={[
+              styles.emptyContainer,
+              {
+                backgroundColor: theme.cardBg,
+                borderColor: theme.cardBorder,
+              },
+            ]}
+          >
+            <Text style={styles.emptyIcon}>🎨</Text>
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>
+              Henüz Çizim Yok
+            </Text>
+            <Text
+              style={[styles.emptyMessage, { color: theme.placeholder }]}
+            >
+              Bu challenge için ilk piksel sanatı eserini sen oluştur ve sergile!
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={submissions}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.columnWrapper}
+            renderItem={({ item }) => (
+              <View style={styles.cardWrapper}>
+                <SubmissionCard submission={item} />
+              </View>
+            )}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  mainWrapper: {
+    flex: 1,
+    position: 'relative',
+  },
+
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+
+  glowTopRight: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    opacity: 0.15,
+  },
+
+  glowBottomLeft: {
+    position: 'absolute',
+    bottom: -60,
+    left: -60,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: '#7B2CBF',
+    opacity: 0.12,
+  },
+
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 20,
+  },
+
+  header: {
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+
+  galleryBadge: {
+    backgroundColor: 'rgba(224, 128, 157, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(224, 128, 157, 0.3)',
+  },
+
+  galleryBadgeText: {
+    color: '#E0809D',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+
+  countBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+
+  countBadgeText: {
+    color: '#FFB703',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  title: {
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+
+  list: {
+    paddingBottom: 24,
+  },
+
+  columnWrapper: {
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+
+  cardWrapper: {
+    width: '48.5%',
+  },
+
+  emptyContainer: {
+    padding: 30,
+    borderWidth: 2,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 40,
+  },
+
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+
+  emptyMessage: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+});
+</file>
+
+<file path=".gitignore">
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+app-example
+
+# generated native folders
+/ios
+/android
+
+.envs
+</file>
+
+<file path="app/_layout.tsx">
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
+import 'react-native-reanimated';
+
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAuth } from '@/src/features/auth/hooks/useAuth';
+
+export const unstable_settings = {
+  anchor: '(tabs)',
+};
+
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === 'auth';
+
+    if (!user && !inAuthGroup) {
+      router.replace('/auth/login');
+    } else if (user && inAuthGroup) {
+      router.replace('/(tabs)');
+    }
+  }, [user, loading, segments, router]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    );
+  }
+
+  return <>{children}</>;
+}
+
+export default function RootLayout() {
+  const colorScheme = useColorScheme();
+
+  return (
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <AuthGate>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="auth" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        </Stack>
+      </AuthGate>
+      <StatusBar style="auto" />
+    </ThemeProvider>
+  );
+}
+</file>
+
+<file path="src/features/auth/screens/RegisterScreen.tsx">
+import { router } from 'expo-router';
+import { useState } from 'react';
+import {
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  useColorScheme,
+} from 'react-native';
+
+import { AntiqueColors } from '@/constants/theme';
+
+import { registerUser } from '../services/authServices';
+
+export const RegisterScreen = () => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const colorScheme = useColorScheme();
+
+  const theme =
+    AntiqueColors[colorScheme === 'dark' ? 'dark' : 'light'];
+
+  const handleRegister = async (): Promise<void> => {
+    if (!email.trim() || !password || !confirmPassword) {
+      Alert.alert('Hata', 'Tüm alanları doldurun.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Hata', 'Şifreler eşleşmiyor.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await registerUser(email.trim(), password);
+
+      Alert.alert('Başarılı', 'Hesabınız oluşturuldu.');
+    } catch {
+      Alert.alert(
+        'Kayıt başarısız',
+        'Hesap oluşturulurken bir hata oluştu.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.background },
+      ]}
+    >
+      <Text style={[styles.title, { color: theme.text }]}>
+        Kayıt Ol
+      </Text>
+
+      <TextInput
+        style={[
+          styles.input,
+          {
+            color: theme.text,
+            backgroundColor: theme.surface,
+            borderColor: theme.border,
+          },
+        ]}
+        placeholder="Email"
+        placeholderTextColor={theme.placeholder}
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="email-address"
+      />
+
+      <TextInput
+        style={[
+          styles.input,
+          {
+            color: theme.text,
+            backgroundColor: theme.surface,
+            borderColor: theme.border,
+          },
+        ]}
+        placeholder="Şifre"
+        placeholderTextColor={theme.placeholder}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+
+      <TextInput
+        style={[
+          styles.input,
+          {
+            color: theme.text,
+            backgroundColor: theme.surface,
+            borderColor: theme.border,
+          },
+        ]}
+        placeholder="Şifre tekrar"
+        placeholderTextColor={theme.placeholder}
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        secureTextEntry
+      />
+
+      <TouchableOpacity
+        style={[
+          styles.button,
+          {
+            backgroundColor: theme.accent,
+            opacity: loading ? 0.6 : 1,
+          },
+        ]}
+        onPress={handleRegister}
+        disabled={loading}
+      >
+        <Text
+          style={[
+            styles.buttonText,
+            { color: theme.background },
+          ]}
+        >
+          {loading
+            ? 'Kayıt oluşturuluyor...'
+            : 'Kayıt Ol'}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => router.push('/auth/login')}
+      >
+        <Text
+          style={[
+            styles.link,
+            { color: theme.accent },
+          ]}
+        >
+          Zaten hesabın var mı? Giriş yap
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 24,
+  },
+
+  input: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+
+  button: {
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+
+  buttonText: {
+    fontWeight: '600',
+  },
+
+  link: {
+    textAlign: 'center',
+    marginTop: 20,
+  },
+});
+</file>
+
+<file path="src/features/submission/components/SubmissionCard.tsx">
+import {
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
+} from 'react-native';
+
+import { AntiqueColors } from '@/constants/theme';
+
+import { VoteButton } from '../../voting/components/VoteButton';
+import type { Submission } from '../types/types';
+
+interface SubmissionCardProps {
+  submission: Submission;
+}
+
+export const SubmissionCard = ({
+  submission,
+}: SubmissionCardProps) => {
+  const colorScheme = useColorScheme();
+
+  const theme =
+    AntiqueColors[colorScheme === 'dark' ? 'dark' : 'light'];
+
+  const { pixels, resolution } = submission;
+
+  return (
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.surface,
+          borderColor: theme.border,
+        },
+      ]}
+    >
+      <View style={styles.pixelArtContainer}>
+        {Array.from({ length: resolution }).map((_, rowIndex) => (
+          <View
+            key={`row-${rowIndex}`}
+            style={styles.pixelRow}
+          >
+            {Array.from({ length: resolution }).map(
+              (_, columnIndex) => {
+                const pixelIndex =
+                  rowIndex * resolution + columnIndex;
+
+                return (
+                  <View
+                    key={`pixel-${rowIndex}-${columnIndex}`}
+                    style={[
+                      styles.pixel,
+                      {
+                        backgroundColor:
+                          pixels[pixelIndex] ?? '#FFFDFC',
+                      },
+                    ]}
+                  />
+                );
+              },
+            )}
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.info}>
+        <Text
+          style={[
+            styles.voteCount,
+            { color: theme.text },
+          ]}
+        >
+          {submission.voteCount ?? 0} oy
+        </Text>
+
+        <VoteButton
+          submissionId={submission.id}
+        />
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  card: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+
+  pixelArtContainer: {
+    alignSelf: 'center',
+    overflow: 'hidden',
+    borderRadius: 8,
+  },
+
+  pixelRow: {
+    flexDirection: 'row',
+  },
+
+  pixel: {
+    width: 8,
+    height: 8,
+  },
+
+  info: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+
+  voteCount: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+});
+</file>
+
+<file path="package.json">
+{
+  "name": "pixel-art",
+  "main": "expo-router/entry",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "expo start",
+    "reset-project": "node ./scripts/reset-project.js",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "lint": "expo lint"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
+    "@react-navigation/bottom-tabs": "^7.4.0",
+    "@react-navigation/elements": "^2.6.3",
+    "@react-navigation/native": "^7.1.8",
+    "expo": "~54.0.35",
+    "expo-constants": "~18.0.13",
+    "expo-font": "~14.0.12",
+    "expo-haptics": "~15.0.8",
+    "expo-image": "~3.0.11",
+    "expo-linking": "~8.0.12",
+    "expo-router": "~6.0.24",
+    "expo-splash-screen": "~31.0.13",
+    "expo-status-bar": "~3.0.9",
+    "expo-symbols": "~1.0.8",
+    "expo-system-ui": "~6.0.9",
+    "expo-web-browser": "~15.0.11",
+    "firebase": "^12.17.1",
+    "firebase-admin": "^14.2.0",
+    "firebase-functions": "^7.3.2",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-gesture-handler": "~2.28.0",
+    "react-native-reanimated": "~4.1.1",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-web": "~0.21.0",
+    "react-native-worklets": "0.5.1"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.0",
+    "eslint": "^9.25.0",
+    "eslint-config-expo": "~10.0.0",
+    "typescript": "~5.9.2"
+  },
+  "private": true
+}
+</file>
+
+<file path="src/features/auth/screens/LoginScreen.tsx">
+import { router } from 'expo-router';
+import { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  useColorScheme,
+} from 'react-native';
+
+import { AntiqueColors } from '@/constants/theme';
+
+import { loginUser } from '../services/authServices';
+
+export const LoginScreen = () => {
+  const colorScheme = useColorScheme();
+  const theme =
+    AntiqueColors[colorScheme === 'dark' ? 'dark' : 'light'];
+
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = async (): Promise<void> => {
+    if (!email.trim() || !password) {
+      setError('Email ve şifre alanlarını doldurun.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      await loginUser(email.trim(), password);
+    } catch {
+      setError('Email veya şifre hatalı.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.background },
+      ]}
+    >
+      <Text
+        style={[
+          styles.title,
+          { color: theme.text },
+        ]}
+      >
+        Giriş Yap
+      </Text>
+
+      <TextInput
+        style={[
+          styles.input,
+          {
+            color: theme.text,
+            backgroundColor: theme.surface,
+            borderColor: theme.border,
+          },
+        ]}
+        placeholder="Email"
+        placeholderTextColor={theme.placeholder}
+        value={email}
+        onChangeText={(value: string) => {
+          setEmail(value);
+          setError(null);
+        }}
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="email-address"
+      />
+
+      <TextInput
+        style={[
+          styles.input,
+          {
+            color: theme.text,
+            backgroundColor: theme.surface,
+            borderColor: theme.border,
+          },
+        ]}
+        placeholder="Şifre"
+        placeholderTextColor={theme.placeholder}
+        value={password}
+        onChangeText={(value: string) => {
+          setPassword(value);
+          setError(null);
+        }}
+        secureTextEntry
+      />
+
+      {error !== null && (
+        <Text
+          style={[
+            styles.errorText,
+            { color: theme.accent },
+          ]}
+        >
+          {error}
+        </Text>
+      )}
+
+      <TouchableOpacity
+        style={[
+          styles.button,
+          {
+            backgroundColor: theme.accent,
+            opacity: loading ? 0.6 : 1,
+          },
+        ]}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        <Text
+          style={[
+            styles.buttonText,
+            { color: '#FFFDFC' },
+          ]}
+        >
+          {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => router.push('/auth/register')}
+      >
+        <Text
+          style={[
+            styles.link,
+            { color: theme.accent },
+          ]}
+        >
+          Hesabın yok mu? Kayıt ol
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 24,
+  },
+
+  input: {
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+  },
+
+  errorText: {
+    marginBottom: 12,
+    fontWeight: '600',
+  },
+
+  button: {
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+
+  buttonText: {
+    fontWeight: '600',
+  },
+
+  link: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontWeight: '600',
+  },
+});
+</file>
+
+<file path="src/features/challenges/types/challenge.ts">
+import type { Timestamp } from 'firebase/firestore';
+
+export type ChallengeStatus = 'active' | 'completed';
+
+export interface Challenge {
+  id: string;
+  title: string;
+  description: string;
+  theme: string;
+  startsAt: Timestamp;
+  endsAt: Timestamp;
+  status: ChallengeStatus;
+  winnerSubmissionId: string | null;
+  createdAt: Timestamp;
+  completedAt: Timestamp | null;
+}
+</file>
+
+<file path="src/features/editor/screens/PixelEditorScreen.tsx">
+import { useState } from 'react';
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+
+import { createSubmission } from '../../submission/services/submissionService';
+
+import { router } from 'expo-router';
+import { PixelGrid } from '../components/PixelGrid';
+import {
+  usePixelEditor,
+  type PixelResolution,
+} from '../hooks/usePixelEditor';
+
+interface PixelEditorScreenProps {
+  challengeId: string;
+}
+
+const PALETTE = [
+  '#1A1A1A',
+  '#3E2723',
+  '#5D4037',
+  '#795548',
+  '#8D6E63',
+  '#A1887F',
+  '#BCAAA4',
+
+  '#5D1F1F',
+  '#8B2635',
+  '#B23A48',
+  '#D1495B',
+  '#E57373',
+  '#EF9A9A',
+  '#FFCDD2',
+
+  '#7A3E00',
+  '#A85400',
+  '#D2691E',
+  '#E88A3D',
+  '#FFB74D',
+  '#FFCC80',
+  '#FFE0B2',
+
+  '#6B5B00',
+  '#8A7500',
+  '#B59B00',
+  '#D4B000',
+  '#FFD54F',
+  '#FFE082',
+  '#FFF3B0',
+
+  '#1B4332',
+  '#2D6A4F',
+  '#40916C',
+  '#52B788',
+  '#81C784',
+  '#A5D6A7',
+  '#C8E6C9',
+
+  '#0D3B66',
+  '#1565C0',
+  '#1976D2',
+  '#42A5F5',
+  '#64B5F6',
+  '#90CAF9',
+  '#BBDEFB',
+
+  '#311B92',
+  '#512DA8',
+  '#673AB7',
+  '#7E57C2',
+  '#9575CD',
+  '#B39DDB',
+  '#D1C4E9',
+
+  '#880E4F',
+  '#AD1457',
+  '#C2185B',
+  '#D81B60',
+  '#EC407A',
+  '#F48FB1',
+  '#F8BBD0',
+
+  '#FDFBF7',
+];
+
+export const PixelEditorScreen = ({
+  challengeId,
+}: PixelEditorScreenProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+    pixels,
+    selectedColor,
+    resolution,
+    setSelectedColor,
+    setResolution,
+    paintPixel,
+    resetPixels,
+  } = usePixelEditor();
+
+  const handleResolutionChange = (
+    newResolution: PixelResolution,
+  ): void => {
+    setResolution(newResolution);
+  };
+
+  const handleSubmit = async (): Promise<void> => {
+    if (isSubmitting) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      await createSubmission({
+        challengeId,
+        pixels,
+        resolution,
+      });
+
+      Alert.alert(
+        'Başarılı',
+        'Pixel art çalışman başarıyla gönderildi.',
+        [
+          {
+            text: 'Tamam',
+            onPress: () => {
+              router.back();
+            },
+          },
+        ],
+        {
+          cancelable: false,
+        },
+      );
+    } catch (error) {
+      console.error('Submission oluşturulamadı:', error);
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Pixel art gönderilirken bir hata oluştu.';
+
+      Alert.alert('Hata', message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* CANVAS AREA */}
+      <View style={styles.canvasArea}>
+        <PixelGrid
+          pixels={pixels}
+          resolution={resolution}
+          onPixelPress={paintPixel}
+        />
+      </View>
+
+      {/* BOTTOM CONTROL PANEL */}
+      <View style={styles.controlPanel}>
+        {/* COLOR PALETTE */}
+        <View style={styles.paletteSection}>
+          <View style={styles.paletteHeader}>
+            <Text style={styles.paletteTitle}>
+              Renkler
+            </Text>
+
+            <Text style={styles.selectedColorText}>
+              {selectedColor}
+            </Text>
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.palette}
+          >
+            {PALETTE.map((color) => (
+              <Pressable
+                key={color}
+                onPress={() => setSelectedColor(color)}
+                style={[
+                  styles.color,
+                  {
+                    backgroundColor: color,
+                  },
+                  selectedColor === color &&
+                    styles.selectedColor,
+                ]}
+              />
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* ACTIONS */}
+        <View style={styles.actions}>
+          <View style={styles.resolutionContainer}>
+            {[16, 32].map((size) => {
+              const isSelected = resolution === size;
+
+              return (
+                <Pressable
+                  key={size}
+                  onPress={() =>
+                    handleResolutionChange(
+                      size as PixelResolution,
+                    )
+                  }
+                  style={[
+                    styles.resolutionButton,
+                    isSelected &&
+                      styles.selectedResolution,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.resolutionText,
+                      isSelected &&
+                        styles.selectedResolutionText,
+                    ]}
+                  >
+                    {size}×{size}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View style={styles.actionButtons}>
+            <Pressable
+              onPress={resetPixels}
+              disabled={isSubmitting}
+              style={styles.secondaryButton}
+            >
+              <Text style={styles.secondaryButtonText}>
+                Temizle
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+              style={[
+                styles.submitButton,
+                isSubmitting &&
+                  styles.disabledButton,
+              ]}
+            >
+              <Text style={styles.submitButtonText}>
+                {isSubmitting
+                  ? 'Gönderiliyor...'
+                  : 'Gönder'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F3EFE8',
+  },
+
+  canvasArea: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+  },
+
+  controlPanel: {
+    backgroundColor: 'rgba(255, 252, 246, 0.94)',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+
+    paddingTop: 14,
+    paddingBottom: 24,
+    paddingHorizontal: 16,
+
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+
+    elevation: 8,
+  },
+
+  paletteSection: {
+    marginBottom: 14,
+  },
+
+  paletteHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+
+  paletteTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#5D4037',
+  },
+
+  selectedColorText: {
+    fontSize: 11,
+    color: '#9E8F84',
+  },
+
+  palette: {
+    alignItems: 'center',
+    paddingRight: 8,
+  },
+
+  color: {
+    width: 32,
+    height: 32,
+    marginRight: 8,
+    borderRadius: 7,
+
+    borderWidth: 1,
+    borderColor: 'rgba(70, 55, 45, 0.12)',
+  },
+
+  selectedColor: {
+    borderWidth: 3,
+    borderColor: '#5D4037',
+
+    transform: [
+      {
+        scale: 1.08,
+      },
+    ],
+  },
+
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  resolutionContainer: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+
+  resolutionButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 11,
+
+    borderRadius: 10,
+
+    backgroundColor: 'rgba(93, 64, 55, 0.06)',
+  },
+
+  selectedResolution: {
+    backgroundColor: '#5D4037',
+  },
+
+  resolutionText: {
+    fontSize: 12,
+    color: '#6D5B52',
+    fontWeight: '500',
+  },
+
+  selectedResolutionText: {
+    color: '#FDFBF7',
+  },
+
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+
+  secondaryButton: {
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+
+    borderRadius: 10,
+
+    backgroundColor: 'rgba(93, 64, 55, 0.06)',
+  },
+
+  secondaryButtonText: {
+    fontSize: 12,
+    color: '#6D5B52',
+    fontWeight: '600',
+  },
+
+  submitButton: {
+    paddingVertical: 9,
+    paddingHorizontal: 17,
+
+    borderRadius: 10,
+
+    backgroundColor: '#8A6A4A',
+  },
+
+  submitButtonText: {
+    fontSize: 12,
+    color: '#FDFBF7',
+    fontWeight: '700',
+  },
+
+  disabledButton: {
+    opacity: 0.5,
+  },
+});
+</file>
+
+<file path="app/(tabs)/index.tsx">
+import { AntiqueColors } from '@/constants/theme';
+import { logoutUser } from '@/src/features/auth/services/authServices';
+import { router } from 'expo-router';
+import React from 'react';
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
+} from 'react-native';
+
+export default function HomeScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  const baseTheme = AntiqueColors[isDark ? 'dark' : 'light'];
+  const theme = {
+    ...baseTheme,
+    accentGlow: isDark ? '#FFD700' : '#8B5A2B',
+    liveBadge: '#FF4757',
+    cardBg: isDark ? '#191724' : '#FFFFFF', // Derin gece moru
+    borderDark: isDark ? '#26233a' : '#E0E0E0',
+    danger: '#FF5252',
+  };
+
+  const handleLogout = async (): Promise<void> => {
+    try {
+      await logoutUser();
+      router.replace('/auth/login');
+    } catch {
+      Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu.');
+    }
+  };
+
+  const handleArchivePress = (): void => {
+    router.push('/archive');
+  };
+
+  return (
+
+    <View style={[styles.mainWrapper, { backgroundColor: theme.background }]}>
+      {/* ARKA PLAN ORB/GLOW EFEKTLERİ (Düzlüğü Kıran Katmanlar) */}
+      <View style={styles.glowTopRight} />
+      <View style={styles.glowBottomLeft} />
+
+      <ScrollView
+        contentContainerStyle={styles.container}
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* HEADER SECTION */}
+        <View style={styles.header}>
+          <View style={styles.titleBadge}>
+            <Text style={styles.titleBadgeText}>🕹️ RETRO PIXEL ARENA</Text>
+          </View>
+
+          <Text style={[styles.title, { color: theme.text }]}>
+            Pixel Art <Text style={{ color: theme.brass }}>Challenge</Text>
+          </Text>
+
+          <Text style={[styles.subtitle, { color: theme.placeholder }]}>
+            Piksellerini konuştur, topluluğun favorisi ol! 🚀
+          </Text>
+        </View>
+
+        {/* MENU SECTION */}
+        <View style={styles.menu}>
+          {/* AKTİF CHALLENGE CARD */}
+          <Pressable
+            onPress={() => router.push('/challenge')}
+            style={({ pressed }) => [
+              styles.card,
+              styles.activeCard,
+              {
+                backgroundColor: theme.cardBg,
+                borderColor: theme.brass,
+                transform: [{ translateY: pressed ? 3 : 0 }],
+              },
+            ]}
+          >
+            <View
+              style={[styles.accentLine, { backgroundColor: theme.brass }]}
+            />
+
+            <View style={styles.cardContent}>
+              <View style={styles.badgeRow}>
+                <View
+                  style={[
+                    styles.liveBadge,
+                    { backgroundColor: theme.liveBadge },
+                  ]}
+                >
+                  <View style={styles.liveDot} />
+                  <Text style={styles.liveText}>AKTİF MEYDAN OKUMA</Text>
+                </View>
+                <Text style={styles.timerText}>⏱️ 24 Saat</Text>
+              </View>
+
+              <Text style={[styles.cardTitle, { color: theme.text }]}>
+                Günün Teması
+              </Text>
+
+              <Text
+                style={[styles.cardDescription, { color: theme.placeholder }]}
+              >
+                Çizimini yap, oylamaya katıl ve kupayı kap!
+              </Text>
+
+              <View style={styles.cardActionRow}>
+                <Text style={[styles.actionText, { color: theme.brass }]}>
+                  Meydan Okumaya Katıl ➔
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.iconContainer}>
+              <Text style={styles.cardPixelIcon}>👾</Text>
+            </View>
+          </Pressable>
+
+          {/* ARŞİV CARD */}
+          <Pressable
+            onPress={handleArchivePress}
+            style={({ pressed }) => [
+              styles.card,
+              {
+                backgroundColor: theme.cardBg,
+                borderColor: theme.borderDark,
+                transform: [{ translateY: pressed ? 3 : 0 }],
+              },
+            ]}
+          >
+            <View
+              style={[styles.accentLine, { backgroundColor: theme.accent }]}
+            />
+
+            <View style={styles.cardContent}>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>
+                Geçmiş Arşiv & Kazananlar
+              </Text>
+
+              <Text
+                style={[styles.cardDescription, { color: theme.placeholder }]}
+              >
+                Eski şampiyonların piksellerini incele
+              </Text>
+            </View>
+
+            <View style={styles.iconContainer}>
+              <Text style={styles.cardPixelIcon}>🏆</Text>
+            </View>
+          </Pressable>
+
+          {/* GÖZ ALMAYAN SADE ÇIKIŞ BUTTONU */}
+          <Pressable
+            onPress={handleLogout}
+            style={({ pressed }) => [
+              styles.logoutButton,
+              {
+                borderColor: 'rgba(255, 82, 82, 0.3)', // Şeffaf ince kırmızı kenarlık
+                opacity: pressed ? 0.6 : 1,
+              },
+            ]}
+          >
+            <Text style={[styles.logoutText, { color: theme.danger }]}>
+              🚪 Oturumu Kapat
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  mainWrapper: {
+    flex: 1,
+    position: 'relative',
+  },
+
+  /* Arka plan parlama efektleri */
+  glowTopRight: {
+    position: 'absolute',
+    top: -60,
+    right: -60,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: '#7B2CBF',
+    opacity: 0.15,
+  },
+
+  glowBottomLeft: {
+    position: 'absolute',
+    bottom: -80,
+    left: -80,
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    backgroundColor: '#B58840',
+    opacity: 0.12,
+  },
+
+  container: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 60,
+    justifyContent: 'center',
+  },
+
+  header: {
+    marginBottom: 28,
+  },
+
+  titleBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#2A1B4E',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#5A2A82',
+    marginBottom: 12,
+  },
+
+  titleBadgeText: {
+    color: '#D8B4FE',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+
+  title: {
+    fontSize: 32,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+    marginBottom: 6,
+  },
+
+  subtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+  },
+
+  menu: {
+    gap: 18,
+  },
+
+  card: {
+    width: '100%',
+    minHeight: 100,
+    borderWidth: 1.5,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+
+  activeCard: {
+    borderWidth: 2,
+  },
+
+  accentLine: {
+    width: 5,
+    height: '100%',
+  },
+
+  cardContent: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    gap: 5,
+  },
+
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFFFFF',
+  },
+
+  liveText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+
+  timerText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFB703',
+  },
+
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+
+  cardDescription: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+
+  cardActionRow: {
+    marginTop: 10,
+  },
+
+  actionText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  iconContainer: {
+    paddingRight: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  cardPixelIcon: {
+    fontSize: 34,
+  },
+
+  /* Şeffaf ve Göz Yormayan Çıkış Butonu */
+  logoutButton: {
+    width: '100%',
+    paddingVertical: 13,
+    borderWidth: 1,
+    borderRadius: 14,
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    marginTop: 14,
+  },
+
+  logoutText: {
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+});
+</file>
+
+<file path="src/features/challenges/screens/ChallengeScreen.tsx">
+import { AntiqueColors } from '@/constants/theme';
+import { router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
+} from 'react-native';
+
+import { useActiveChallenge } from '../hooks/useActiveChallenge';
+
+// Tema koduna göre dinamik emoji/figör ve renk eşleştirmesi
+const THEME_ASSETS: Record<string, { icon: string; label: string; accentColor: string }> = {
+  uzay_macerasi: { icon: '🚀', label: 'UZAY', accentColor: '#FF7AC6' },
+  cilgin_canlilar: { icon: '🐱', label: 'CANLILAR', accentColor: '#FF922B' },
+  masalsi_doga: { icon: '🍄', label: 'DOĞA', accentColor: '#51CF66' },
+  gece_acikmalari: { icon: '🍕', label: 'YEMEK', accentColor: '#FFD43B' },
+  buyulu_dunyam: { icon: '🧙‍♂️', label: 'BÜYÜ', accentColor: '#CC5DE8' },
+  nostalji_atari: { icon: '🕹️', label: 'ATARİ', accentColor: '#FF6B6B' },
+  gelecegin_sehri: { icon: '🤖', label: 'CYBER', accentColor: '#339AF0' },
+  derin_okyanus: { icon: '🐙', label: 'OKYANUS', accentColor: '#22B8CF' },
+  sevimli_canavarlar: { icon: '👾', label: 'CANAVAR', accentColor: '#F06595' },
+  cilgin_araclar: { icon: '🏎️', label: 'ARAÇ', accentColor: '#FCC419' },
+  perili_gece: { icon: '👻', label: 'PERİLİ', accentColor: '#845EF7' },
+  sira_disi_meslekler: { icon: '👨‍🔬', label: 'MESLEK', accentColor: '#20C997' },
+};
+
+export const ChallengeScreen = () => {
+  const { challenge, loading, error } = useActiveChallenge();
+
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const baseTheme = AntiqueColors[isDark ? 'dark' : 'light'];
+
+  // Pembe ağırlıklı retro renk paleti
+  const theme = {
+    ...baseTheme,
+    pinkAccent: '#E0809D', // Senin tatlı pembe buton tonun
+    pinkGlow: 'rgba(224, 128, 157, 0.18)',
+    purpleGlow: 'rgba(123, 44, 191, 0.2)',
+    cardBg: isDark ? '#1A1625' : '#FFFFFF',
+    cardBorder: isDark ? '#2D223B' : '#F0E6ED',
+  };
+
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+
+  useEffect(() => {
+    if (!challenge?.endsAt) return;
+
+    const calculateTimeLeft = () => {
+      const endTime = challenge.endsAt.toDate().getTime();
+      const remaining = Math.max(0, endTime - Date.now());
+      setTimeLeft(remaining);
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(interval);
+  }, [challenge]);
+
+  const formatTimeLeft = (milliseconds: number): string => {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (days > 0) return `${days} gün ${hours}s kaldı`;
+    if (hours > 0) return `${hours}sa ${minutes}dk kaldı`;
+    if (minutes > 0) return `${minutes}dk ${seconds}sn kaldı`;
+    return `${seconds}sn kaldı`;
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.center, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.pinkAccent} />
+      </View>
+    );
+  }
+
+  if (error || !challenge) {
+    return (
+      <View style={[styles.center, { backgroundColor: theme.background }]}>
+        <Text style={{ color: theme.pinkAccent, fontSize: 16 }}>
+          {error || 'Şu anda aktif bir challenge bulunmuyor.'}
+        </Text>
+      </View>
+    );
+  }
+
+  const challengeEnded = timeLeft <= 0;
+  // Dinamik figür tespiti (Bulamazsa varsayılan 🎨 piksel ikonunu basar)
+  const themeAsset = THEME_ASSETS[challenge.theme] || {
+    icon: '🎨',
+    label: challenge.theme.toUpperCase(),
+    accentColor: theme.pinkAccent,
+  };
+
+  return (
+    <View style={[styles.mainWrapper, { backgroundColor: theme.background }]}>
+      {/* ARKA PLANPEMBE / MOR AMBİYANS IŞIKLARI */}
+      <View style={[styles.glowTopRight, { backgroundColor: theme.pinkAccent }]} />
+      <View style={styles.glowBottomLeft} />
+
+      <ScrollView contentContainerStyle={styles.container} bounces={false}>
+        {/* ÜST GEZİNTİ / BAŞLIK */}
+        <View style={styles.headerRow}>
+          <Pressable onPress={() => router.back()} style={styles.backButton}>
+            <Text style={[styles.backText, { color: theme.text }]}>← Geri</Text>
+          </Pressable>
+          <View style={styles.arenaBadge}>
+            <Text style={styles.arenaBadgeText}>ARENA #01</Text>
+          </View>
+        </View>
+
+        {/* ANA TEMATİK HERO KART (FIGÜRLÜ) */}
+        <View
+          style={[
+            styles.heroCard,
+            {
+              backgroundColor: theme.cardBg,
+              borderColor: theme.pinkAccent,
+            },
+          ]}
+        >
+          {/* SAĞ ÜSTTEKİ BÜYÜK DİNAMİK TEMA FİGÜRÜ */}
+          <View style={styles.themeAvatarContainer}>
+            <Text style={styles.themeAvatarIcon}>{themeAsset.icon}</Text>
+          </View>
+
+          {/* Rozet */}
+          <View style={styles.themeTag}>
+            <Text style={styles.themeTagText}>TEMA: {themeAsset.label}</Text>
+          </View>
+
+          <Text style={[styles.title, { color: theme.text }]}>
+            {challenge.title}
+          </Text>
+
+          <Text style={[styles.description, { color: theme.placeholder }]}>
+            {challenge.description}
+          </Text>
+
+          {/* SAYAÇ KUTUSU */}
+          <View style={styles.timerBox}>
+            <Text
+              style={[
+                styles.timerText,
+                { color: challengeEnded ? theme.danger : theme.pinkAccent },
+              ]}
+            >
+              {challengeEnded
+                ? '⏱ Challenge Sona Erdi'
+                : `⏱️ ${formatTimeLeft(timeLeft)}`}
+            </Text>
+          </View>
+        </View>
+
+        {/* AKSİYON BUTONLARI */}
+        <View style={styles.buttonGroup}>
+          <Pressable
+            disabled={challengeEnded}
+            onPress={() =>
+              router.push({
+                pathname: '/editor',
+                params: { challengeId: challenge.id },
+              })
+            }
+            style={({ pressed }) => [
+              styles.primaryButton,
+              {
+                backgroundColor: theme.pinkAccent,
+                opacity: challengeEnded ? 0.4 : pressed ? 0.85 : 1,
+                transform: [{ translateY: pressed ? 3 : 0 }],
+              },
+            ]}
+          >
+            <Text style={styles.primaryButtonText}>🎨 Pixel Art Oluştur</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: '/submissions',
+                params: { challengeId: challenge.id },
+              })
+            }
+            style={({ pressed }) => [
+              styles.secondaryButton,
+              {
+                borderColor: theme.pinkAccent,
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#FFF',
+                opacity: pressed ? 0.8 : 1,
+                transform: [{ translateY: pressed ? 3 : 0 }],
+              },
+            ]}
+          >
+            <Text style={[styles.secondaryButtonText, { color: theme.text }]}>
+              🖼️ Galeriyi & Çizimleri Gör
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  mainWrapper: {
+    flex: 1,
+    position: 'relative',
+  },
+
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+
+  /* Arka Plan Glow Doku */
+  glowTopRight: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    opacity: 0.18,
+  },
+
+  glowBottomLeft: {
+    position: 'absolute',
+    bottom: -60,
+    left: -60,
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    backgroundColor: '#7B2CBF',
+    opacity: 0.15,
+  },
+
+  container: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 40,
+    justifyContent: 'center',
+  },
+
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+
+  backButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+
+  backText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
+  arenaBadge: {
+    backgroundColor: 'rgba(224, 128, 157, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(224, 128, 157, 0.4)',
+  },
+
+  arenaBadgeText: {
+    color: '#E0809D',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+
+  /* Hero Kart Mantığı */
+  heroCard: {
+    width: '100%',
+    padding: 24,
+    borderRadius: 20,
+    borderWidth: 2,
+    position: 'relative',
+    overflow: 'hidden',
+    marginBottom: 24,
+    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+  },
+
+  themeAvatarContainer: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(224, 128, 157, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  themeAvatarIcon: {
+    fontSize: 38,
+  },
+
+  themeTag: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#E0809D',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginBottom: 14,
+  },
+
+  themeTagText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+
+  title: {
+    fontSize: 28,
+    fontWeight: '900',
+    marginBottom: 10,
+    paddingRight: 60, // İkona çarpmaması için
+  },
+
+  description: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 20,
+    fontWeight: '500',
+  },
+
+  timerBox: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(224, 128, 157, 0.3)',
+  },
+
+  timerText: {
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+
+  /* Butonlar */
+  buttonGroup: {
+    gap: 14,
+  },
+
+  primaryButton: {
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 0,
+    elevation: 3,
+  },
+
+  primaryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+
+  secondaryButton: {
+    paddingVertical: 15,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  secondaryButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+});
+</file>
+
+<file path="constants/theme.ts">
+export const AntiqueColors = {
+  light: {
+    background: '#F9F8F5',
+    surface: '#FFFDFC',
+
+    text: '#35443D',
+    placeholder: '#8A9891',
+    border: '#DDE8E2',
+
+    accent: '#D99AAE',      // toz pembe
+    brass: '#8FC8B5',       // su yeşili
+    success: '#8FC8B5',
+    danger: '#D98F9F',
+  },
+
+  dark: {
+    background: '#1D2522',
+    surface: '#26302C',
+
+    text: '#F7F6F2',
+    placeholder: '#A8B7B0',
+    border: '#40504A',
+
+    accent: '#D99AAE',      // toz pembe
+    brass: '#8FC8B5',       // su yeşili
+    success: '#8FC8B5',
+    danger: '#D98F9F',
+  },
+};
+</file>
+
+</files>

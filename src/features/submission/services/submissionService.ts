@@ -10,6 +10,7 @@ import {
 import { db } from '../../../services/firebase/firestore';
 import { auth } from '../../auth/services/authServices';
 
+import { limit } from 'firebase/firestore';
 import type {
   CreateSubmissionData,
   Submission,
@@ -22,6 +23,24 @@ export const createSubmission = async (
 
   if (!user) {
     throw new Error('Kullanıcı oturumu bulunamadı.');
+  }
+
+  // Kullanıcının bu challenge'a daha önce katılıp katılmadığını kontrol et
+  const existingSubmissionQuery = query(
+    collection(db, 'submissions'),
+    where('userId', '==', user.uid),
+    where('challengeId', '==', data.challengeId),
+    limit(1),
+  );
+
+  const existingSnapshot = await getDocs(
+    existingSubmissionQuery,
+  );
+
+  if (!existingSnapshot.empty) {
+    throw new Error(
+      'Bu challenge için zaten bir çizim gönderdiniz.',
+    );
   }
 
   const submissionRef = await addDoc(

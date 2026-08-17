@@ -10,6 +10,7 @@ import {
 
 import { createSubmission } from '../../submission/services/submissionService';
 
+import { router } from 'expo-router';
 import { PixelGrid } from '../components/PixelGrid';
 import {
   usePixelEditor,
@@ -126,14 +127,27 @@ export const PixelEditorScreen = ({
       Alert.alert(
         'Başarılı',
         'Pixel art çalışman başarıyla gönderildi.',
+        [
+          {
+            text: 'Tamam',
+            onPress: () => {
+              router.back();
+            },
+          },
+        ],
+        {
+          cancelable: false,
+        },
       );
     } catch (error) {
       console.error('Submission oluşturulamadı:', error);
 
-      Alert.alert(
-        'Hata',
-        'Pixel art gönderilirken bir hata oluştu.',
-      );
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Pixel art gönderilirken bir hata oluştu.';
+
+      Alert.alert('Hata', message);
     } finally {
       setIsSubmitting(false);
     }

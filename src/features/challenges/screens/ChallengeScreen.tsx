@@ -1,3 +1,5 @@
+// src/features/challenges/screens/ChallengeScreen.tsx
+
 import { AntiqueColors } from '@/constants/theme';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -13,33 +15,87 @@ import {
 
 import { useActiveChallenge } from '../hooks/useActiveChallenge';
 
-// Tema koduna göre dinamik emoji/figör ve renk eşleştirmesi
-const THEME_ASSETS: Record<string, { icon: string; label: string; accentColor: string }> = {
-  uzay_macerasi: { icon: '🚀', label: 'UZAY', accentColor: '#FF7AC6' },
-  cilgin_canlilar: { icon: '🐱', label: 'CANLILAR', accentColor: '#FF922B' },
-  masalsi_doga: { icon: '🍄', label: 'DOĞA', accentColor: '#51CF66' },
-  gece_acikmalari: { icon: '🍕', label: 'YEMEK', accentColor: '#FFD43B' },
-  buyulu_dunyam: { icon: '🧙‍♂️', label: 'BÜYÜ', accentColor: '#CC5DE8' },
-  nostalji_atari: { icon: '🕹️', label: 'ATARİ', accentColor: '#FF6B6B' },
-  gelecegin_sehri: { icon: '🤖', label: 'CYBER', accentColor: '#339AF0' },
-  derin_okyanus: { icon: '🐙', label: 'OKYANUS', accentColor: '#22B8CF' },
-  sevimli_canavarlar: { icon: '👾', label: 'CANAVAR', accentColor: '#F06595' },
-  cilgin_araclar: { icon: '🏎️', label: 'ARAÇ', accentColor: '#FCC419' },
-  perili_gece: { icon: '👻', label: 'PERİLİ', accentColor: '#845EF7' },
-  sira_disi_meslekler: { icon: '👨‍🔬', label: 'MESLEK', accentColor: '#20C997' },
+const THEME_ASSETS: Record<
+  string,
+  { icon: string; label: string; accentColor: string }
+> = {
+  uzay_macerasi: {
+    icon: '🚀',
+    label: 'UZAY',
+    accentColor: '#FF7AC6',
+  },
+  cilgin_canlilar: {
+    icon: '🐱',
+    label: 'CANLILAR',
+    accentColor: '#FF922B',
+  },
+  masalsi_doga: {
+    icon: '🍄',
+    label: 'DOĞA',
+    accentColor: '#51CF66',
+  },
+  gece_acikmalari: {
+    icon: '🍕',
+    label: 'YEMEK',
+    accentColor: '#FFD43B',
+  },
+  buyulu_dunyam: {
+    icon: '🧙‍♂️',
+    label: 'BÜYÜ',
+    accentColor: '#CC5DE8',
+  },
+  nostalji_atari: {
+    icon: '🕹️',
+    label: 'ATARİ',
+    accentColor: '#FF6B6B',
+  },
+  gelecegin_sehri: {
+    icon: '🤖',
+    label: 'CYBER',
+    accentColor: '#339AF0',
+  },
+  derin_okyanus: {
+    icon: '🐙',
+    label: 'OKYANUS',
+    accentColor: '#22B8CF',
+  },
+  sevimli_canavarlar: {
+    icon: '👾',
+    label: 'CANAVAR',
+    accentColor: '#F06595',
+  },
+  cilgin_araclar: {
+    icon: '🏎️',
+    label: 'ARAÇ',
+    accentColor: '#FCC419',
+  },
+  perili_gece: {
+    icon: '👻',
+    label: 'PERİLİ',
+    accentColor: '#845EF7',
+  },
+  sira_disi_meslekler: {
+    icon: '👨‍🔬',
+    label: 'MESLEK',
+    accentColor: '#20C997',
+  },
 };
 
 export const ChallengeScreen = () => {
-  const { challenge, loading, error } = useActiveChallenge();
+  const {
+    challenge,
+    loading,
+    error,
+    refetch,
+  } = useActiveChallenge();
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const baseTheme = AntiqueColors[isDark ? 'dark' : 'light'];
 
-  // Pembe ağırlıklı retro renk paleti
   const theme = {
     ...baseTheme,
-    pinkAccent: '#E0809D', // Senin tatlı pembe buton tonun
+    pinkAccent: '#E0809D',
     pinkGlow: 'rgba(224, 128, 157, 0.18)',
     purpleGlow: 'rgba(123, 44, 191, 0.2)',
     cardBg: isDark ? '#1A1625' : '#FFFFFF',
@@ -48,77 +104,184 @@ export const ChallengeScreen = () => {
 
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
+  /*
+   * Challenge değiştiğinde sayaç yeniden başlar.
+   */
   useEffect(() => {
-    if (!challenge?.endsAt) return;
+    if (!challenge?.endsAt) {
+      setTimeLeft(0);
+      return;
+    }
 
     const calculateTimeLeft = () => {
       const endTime = challenge.endsAt.toDate().getTime();
       const remaining = Math.max(0, endTime - Date.now());
+
       setTimeLeft(remaining);
     };
 
     calculateTimeLeft();
+
     const interval = setInterval(calculateTimeLeft, 1000);
+
     return () => clearInterval(interval);
   }, [challenge]);
 
+  /*
+   * Challenge bittiğinde backend'in yeni challenge'ı oluşturmasını
+   * beklemek yerine kısa aralıklarla tekrar Firestore'dan kontrol ediyoruz.
+   *
+   * Ayrıca challenge yoksa ekran sürekli kendini toparlamaya çalışır.
+   */
+  useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      void refetch();
+    }, 10000);
+
+    return () => clearInterval(refreshInterval);
+  }, [refetch]);
+
+  /*
+   * Sayaç 0'a ulaştığında hemen refetch.
+   * 10 saniyelik interval'i beklemiyoruz.
+   */
+  useEffect(() => {
+    if (!challenge || timeLeft > 0) return;
+
+    void refetch();
+  }, [challenge, timeLeft, refetch]);
+
   const formatTimeLeft = (milliseconds: number): string => {
     const totalSeconds = Math.floor(milliseconds / 1000);
+
     const days = Math.floor(totalSeconds / 86400);
     const hours = Math.floor((totalSeconds % 86400) / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
-    if (days > 0) return `${days} gün ${hours}s kaldı`;
-    if (hours > 0) return `${hours}sa ${minutes}dk kaldı`;
-    if (minutes > 0) return `${minutes}dk ${seconds}sn kaldı`;
+    if (days > 0) {
+      return `${days} gün ${hours}s kaldı`;
+    }
+
+    if (hours > 0) {
+      return `${hours}sa ${minutes}dk kaldı`;
+    }
+
+    if (minutes > 0) {
+      return `${minutes}dk ${seconds}sn kaldı`;
+    }
+
     return `${seconds}sn kaldı`;
   };
 
-  if (loading) {
+  if (loading && !challenge) {
     return (
-      <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <ActivityIndicator size="large" color={theme.pinkAccent} />
+      <View
+        style={[
+          styles.center,
+          { backgroundColor: theme.background },
+        ]}
+      >
+        <ActivityIndicator
+          size="large"
+          color={theme.pinkAccent}
+        />
+        <Text
+          style={{
+            color: theme.text,
+            marginTop: 12,
+            fontWeight: '700',
+          }}
+        >
+          Yeni challenge aranıyor...
+        </Text>
       </View>
     );
   }
 
-  if (error || !challenge) {
+  /*
+   * Challenge yoksa artık sadece statik hata göstermiyoruz.
+   * Hook 10 saniyede bir tekrar deniyor.
+   */
+  if (!challenge) {
     return (
-      <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <Text style={{ color: theme.pinkAccent, fontSize: 16 }}>
-          {error || 'Şu anda aktif bir challenge bulunmuyor.'}
+      <View
+        style={[
+          styles.center,
+          { backgroundColor: theme.background },
+        ]}
+      >
+        <ActivityIndicator
+          size="small"
+          color={theme.pinkAccent}
+        />
+
+        <Text
+          style={{
+            color: theme.text,
+            fontSize: 16,
+            fontWeight: '700',
+            marginTop: 12,
+            textAlign: 'center',
+          }}
+        >
+          {error || 'Yeni challenge hazırlanıyor...'}
         </Text>
       </View>
     );
   }
 
   const challengeEnded = timeLeft <= 0;
-  // Dinamik figür tespiti (Bulamazsa varsayılan 🎨 piksel ikonunu basar)
-  const themeAsset = THEME_ASSETS[challenge.theme] || {
-    icon: '🎨',
-    label: challenge.theme.toUpperCase(),
-    accentColor: theme.pinkAccent,
-  };
+
+  const themeAsset =
+    THEME_ASSETS[challenge.theme] || {
+      icon: '🎨',
+      label: challenge.theme.toUpperCase(),
+      accentColor: theme.pinkAccent,
+    };
 
   return (
-    <View style={[styles.mainWrapper, { backgroundColor: theme.background }]}>
-      {/* ARKA PLANPEMBE / MOR AMBİYANS IŞIKLARI */}
-      <View style={[styles.glowTopRight, { backgroundColor: theme.pinkAccent }]} />
+    <View
+      style={[
+        styles.mainWrapper,
+        { backgroundColor: theme.background },
+      ]}
+    >
+      <View
+        style={[
+          styles.glowTopRight,
+          { backgroundColor: theme.pinkAccent },
+        ]}
+      />
+
       <View style={styles.glowBottomLeft} />
 
-      <ScrollView contentContainerStyle={styles.container} bounces={false}>
-        {/* ÜST GEZİNTİ / BAŞLIK */}
+      <ScrollView
+        contentContainerStyle={styles.container}
+        bounces={false}
+      >
         <View style={styles.headerRow}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Text style={[styles.backText, { color: theme.text }]}>← Geri</Text>
+          <Pressable
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <Text
+              style={[
+                styles.backText,
+                { color: theme.text },
+              ]}
+            >
+              ← Geri
+            </Text>
           </Pressable>
+
           <View style={styles.arenaBadge}>
-            <Text style={styles.arenaBadgeText}>ARENA #01</Text>
+            <Text style={styles.arenaBadgeText}>
+              ARENA #01
+            </Text>
           </View>
         </View>
 
-        {/* ANA TEMATİK HERO KART (FIGÜRLÜ) */}
         <View
           style={[
             styles.heroCard,
@@ -128,79 +291,118 @@ export const ChallengeScreen = () => {
             },
           ]}
         >
-          {/* SAĞ ÜSTTEKİ BÜYÜK DİNAMİK TEMA FİGÜRÜ */}
           <View style={styles.themeAvatarContainer}>
-            <Text style={styles.themeAvatarIcon}>{themeAsset.icon}</Text>
+            <Text style={styles.themeAvatarIcon}>
+              {themeAsset.icon}
+            </Text>
           </View>
 
-          {/* Rozet */}
           <View style={styles.themeTag}>
-            <Text style={styles.themeTagText}>TEMA: {themeAsset.label}</Text>
+            <Text style={styles.themeTagText}>
+              TEMA: {themeAsset.label}
+            </Text>
           </View>
 
-          <Text style={[styles.title, { color: theme.text }]}>
+          <Text
+            style={[
+              styles.title,
+              { color: theme.text },
+            ]}
+          >
             {challenge.title}
           </Text>
 
-          <Text style={[styles.description, { color: theme.placeholder }]}>
+          <Text
+            style={[
+              styles.description,
+              { color: theme.placeholder },
+            ]}
+          >
             {challenge.description}
           </Text>
 
-          {/* SAYAÇ KUTUSU */}
           <View style={styles.timerBox}>
             <Text
               style={[
                 styles.timerText,
-                { color: challengeEnded ? theme.danger : theme.pinkAccent },
+                {
+                  color: challengeEnded
+                    ? theme.danger
+                    : theme.pinkAccent,
+                },
               ]}
             >
               {challengeEnded
-                ? '⏱ Challenge Sona Erdi'
+                ? '⏱ Yeni challenge hazırlanıyor...'
                 : `⏱️ ${formatTimeLeft(timeLeft)}`}
             </Text>
           </View>
         </View>
 
-        {/* AKSİYON BUTONLARI */}
         <View style={styles.buttonGroup}>
           <Pressable
             disabled={challengeEnded}
             onPress={() =>
               router.push({
                 pathname: '/editor',
-                params: { challengeId: challenge.id },
+                params: {
+                  challengeId: challenge.id,
+                },
               })
             }
             style={({ pressed }) => [
               styles.primaryButton,
               {
                 backgroundColor: theme.pinkAccent,
-                opacity: challengeEnded ? 0.4 : pressed ? 0.85 : 1,
-                transform: [{ translateY: pressed ? 3 : 0 }],
+                opacity: challengeEnded
+                  ? 0.4
+                  : pressed
+                    ? 0.85
+                    : 1,
+                transform: [
+                  {
+                    translateY: pressed ? 3 : 0,
+                  },
+                ],
               },
             ]}
           >
-            <Text style={styles.primaryButtonText}>🎨 Pixel Art Oluştur</Text>
+            <Text style={styles.primaryButtonText}>
+              🎨 Pixel Art Oluştur
+            </Text>
           </Pressable>
 
           <Pressable
             onPress={() =>
               router.push({
                 pathname: '/submissions',
-                params: { challengeId: challenge.id },
+                params: {
+                  challengeId: challenge.id,
+                },
               })
             }
             style={({ pressed }) => [
               styles.secondaryButton,
               {
                 borderColor: theme.pinkAccent,
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#FFF',
+                backgroundColor: isDark
+                  ? 'rgba(255, 255, 255, 0.03)'
+                  : '#FFF',
                 opacity: pressed ? 0.8 : 1,
-                transform: [{ translateY: pressed ? 3 : 0 }],
+                transform: [
+                  {
+                    translateY: pressed ? 3 : 0,
+                  },
+                ],
               },
             ]}
           >
-            <Text style={[styles.secondaryButtonText, { color: theme.text }]}>
+            <Text
+              style={[
+                styles.secondaryButtonText,
+                { color: theme.text },
+              ]}
+            >
               🖼️ Galeriyi & Çizimleri Gör
             </Text>
           </Pressable>
@@ -223,7 +425,6 @@ const styles = StyleSheet.create({
     padding: 24,
   },
 
-  /* Arka Plan Glow Doku */
   glowTopRight: {
     position: 'absolute',
     top: -50,
@@ -286,7 +487,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  /* Hero Kart Mantığı */
   heroCard: {
     width: '100%',
     padding: 24,
@@ -296,7 +496,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 24,
     elevation: 4,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
     shadowOpacity: 0.25,
     shadowRadius: 10,
   },
@@ -337,7 +540,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '900',
     marginBottom: 10,
-    paddingRight: 60, // İkona çarpmaması için
+    paddingRight: 60,
   },
 
   description: {
@@ -363,7 +566,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  /* Butonlar */
   buttonGroup: {
     gap: 14,
   },
@@ -373,7 +575,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     shadowOpacity: 0.3,
     shadowRadius: 0,
     elevation: 3,
