@@ -1,42 +1,45 @@
-# Pixel Art Challenge
+div align="center">
 
-<div align="center">
+<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Video%20Game.png" alt="Pixel Arena" width="80" height="80" />
 
-![React Native](https://img.shields.io/badge/React_Native-0.74+-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![Expo](https://img.shields.io/badge/Expo-51.0+-000020?style=for-the-badge&logo=expo&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+# 👾 Pixel Art Challenge
+
+**Real-time Themed Pixel Art Arena & Autonomous Voting Platform**
+
+[![React Native](https://img.shields.io/badge/React_Native-0.74+-20232a?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactnative.dev/)
+[![Expo](https://img.shields.io/badge/Expo-SDK_51-000020?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Firebase](https://img.shields.io/badge/Firebase-BaaS-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-7952B3?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 <p align="center">
-  A React Native mobile application where users create pixel art based on an active challenge theme and compete through community voting.
+  Mobil kullanıcıların tematik yarışmalara katılıp piksel sanatı çizdiği, canlı topluluk oylamasıyla şampiyonların belirlendiği retro-modern mobil platform.
 </p>
 
-</div>
-
-> [!NOTE]
-> 🚧 **Project Status:** Currently under active development.
+```bash
+# Hızlı Kurulum & Başlatma (Quickstart)
+git clone https://github.com/begumaLakus/pixel-art-challenge.git && cd pixel-art-challenge
+npm install && cp .env.example .env && npx expo start
+```
 
 ---
 
-## 📱 Screenshots
+</div>
+
+## 📱 Screenshots & UI
 
 <div align="center">
   <table>
     <tr>
-      <td align="center" width="33%">
-        <b>Challenge Arena</b><br/><br/>
-        <img src="./assets/screenshots/challenge-screen.png" alt="Challenge Screen" width="100%"/>
-        <br/><em>Theme, timer & user actions</em>
+      <td align="center" width="50%">
+        <b>⚡ Live Challenge Arena</b><br/><br/>
+        <img src="./assets/screenshots/challenge-screen.png" alt="Challenge Screen" width="280"/>
+        <br/><em>Aktif tema, sayaç & katılım aksiyonları</em>
       </td>
-      <td align="center" width="33%">
-        <b>Pixel Editor</b><br/><br/>
-        <img src="./assets/screenshots/editor-screen.png" alt="Pixel Editor" width="100%"/>
-        <br/><em>Dynamic grid & color palette</em>
-      </td>
-      <td align="center" width="33%">
-        <b>Community Gallery</b><br/><br/>
-        <img src="./assets/screenshots/submissions-screen.png" alt="Submissions Screen" width="100%"/>
-        <br/><em>Artwork feed & live voting</em>
+      <td align="center" width="50%">
+        <b>🎨 Pixel Studio & Hub</b><br/><br/>
+        <img src="./assets/screenshots/editor-screen.png" alt="Pixel Editor" width="280"/>
+        <br/><em>Çizim alanı, galeri akışı & arşiv</em>
       </td>
     </tr>
   </table>
@@ -44,48 +47,15 @@
 
 ---
 
-## 🛠 Tech Stack
+## ⚡ Hızlı Başlangıç (Getting Started)
 
-| Domain | Technology |
-|---|---|
-| **Framework** | React Native (Expo SDK 51+) |
-| **Language** | TypeScript |
-| **Navigation** | Expo Router |
-| **Backend / DB** | Firebase Firestore & Authentication |
-| **Serverless Architecture** | Firebase Cloud Functions |
+### 1. Gereksinimler
+- **Node.js**: `v18.x` veya üzeri
+- **Paket Yöneticisi**: `npm`, `yarn` veya `pnpm`
+- **Geliştirici İstemcisi**: Expo Go uygulaması veya iOS/Android Emülatör
 
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-Ensure the following are installed on your local development machine:
-
-- **Node.js** (v18 or higher recommended)
-- **npm** or **yarn** / **pnpm**
-- **Expo Go** app on your physical mobile device or an iOS/Android Simulator
-
----
-
-### Installation & Setup
-
-#### 1. Clone the repository
-
-```bash
-git clone https://github.com/begumaLakus/pixel-art-challenge.git
-cd pixel-art-challenge
-```
-
-#### 2. Install dependencies
-
-```bash
-npm install
-```
-
-#### 3. Configure Firebase environment variables
-
-Create a `.env` file in the root directory:
+### 2. Ortam Değişkenleri (.env)
+Kök dizinde `.env` dosyasını oluşturun ve Firebase kimlik bilgilerinizi tanımlayın:
 
 ```env
 EXPO_PUBLIC_FIREBASE_API_KEY=your_api_key
@@ -96,152 +66,83 @@ EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id
 ```
 
-> [!WARNING]
-> Never commit `.env` files or private credentials to public version control.
-
-#### 4. Start the application
-
+### 3. Çalıştırma
 ```bash
+# Metro Bundler'ı başlat
 npx expo start
+
+# Doğrudan emülatör üzerinde açmak için:
+# 'i' tuşuna bas -> iOS Simulator
+# 'a' tuşuna bas -> Android Emulator
 ```
 
-Use the printed QR code with **Expo Go** (Android/iOS) or press `a` for Android Emulator / `i` for iOS Simulator.
+---
+
+## 🛠 Teknoloji Yığını (Tech Stack)
+
+| Katman | Teknoloji | Açıklama |
+|---|---|---|
+| **Core Framework** | React Native (Expo SDK 51+) | Cross-platform mobil altyapı |
+| **Language** | TypeScript | Uçtan uca tip güvenliği ve ölçeklenebilirlik |
+| **Routing** | Expo Router | File-based tip kontrollü navigasyon |
+| **Backend & Auth** | Firebase Firestore & Auth | Gerçek zamanlı veri senkronizasyonu ve kullanıcı yönetimi |
+| **Automation** | Firebase Cloud Functions | Otonom yarışma döngüsü, oy doğrulama & cron tetikleyiciler |
 
 ---
 
-## 📐 Technical Architecture & Decisions
+## 📐 Teknik Mimari ve Mühendislik Kararları
 
-### 🎨 1. Pixel Editor Grid (16×16 & 32×32)
-- **Default Resolution:** 16×16 pixels.
-- **Detailed Mode:** 32×32 pixels option.
-- **Why?** A 16×16 grid strikes the optimal balance between accessible interaction on touchscreens and preserving retro pixel aesthetics. The optional 32×32 mode offers higher fidelity for advanced compositions without altering the core drawing mechanics.
+**1. Pixel Canvas & Render Optimizasyonu (16×16 & 32×32)**
+- **Format:** Çizim hücreleri düz/2B matris dizisi olarak tutulur (`Array(size * size)`). Bu yapı JSON depolama maliyetini minimuma indirir.
+- **İzolasyon:** Canvas hücreleri re-render yükünü engellemek adına memoize edilmiş bileşen yapısıyla çalışır. 16×16 mobil dokunmatik deneyimi dengelerken 32×32 opsiyonu detaylı çizim alanı sunar.
 
----
+**2. Otonom Challenge Yaşam Döngüsü**
+- **Cron Döngüsü:** Firebase Cloud Functions zamanlayıcısı ile yarışma süresinin bitişi otomatik dinlenir.
+- **Otonom Akış:** İstemci tarafı manipülasyonları engellenir; sunucu süreyi denetler, oyları sayar, kazananı `Champions Archive` koleksiyonuna yazar ve yeni temayı anında başlatır.
 
-### ⏱️ 2. Autonomous Challenge Lifecycle
-- The application relies on an always-active challenge cycle comprising: `Theme`, `Start Time`, `Expiration Time`, and associated `Submissions & Votes`.
-- **Firebase Cloud Functions** handle scheduled cron triggers:
-  1. Detect expiration of the active challenge.
-  2. Aggregate and tally user votes.
-  3. Crown and persist the winner to the archive.
-  4. Automatically select the next theme and seed a new active challenge.
-- **Why?** Eliminates dependency on manual administrator interventions and client-side lifecycle triggers. Server-side scheduling ensures seamless, 24/7 autonomous rounds regardless of user concurrency.
+**3. Güvenli & Otoriter Oylama (Anti-Cheat Voting)**
+- **Bütünlük:** Kullanıcıların kendi çizimlerine oy vermesi ve mükerrer oy kullanımı engellenir.
+- **Validasyon:** Kurallar yalnızca UI üzerinde değil, Firestore Security Rules ve Cloud Functions üzerinde sunucu seviyesinde denetlenir.
 
 ---
 
-### 🗳️ 3. Authoritative Backend Voting
-- Users browse submissions and cast votes for entries in real time.
-- Voting constraints and deduplication rules are strictly validated on the backend via Firebase Cloud Functions and Firestore Security Rules.
-- **Why?** Client-side validation is inherently vulnerable to tampering. Centralizing vote integrity on the backend provides a single source of truth for vote limits, validation, and anti-abuse prevention.
-
----
-
-### 🏆 4. Challenge Completion & Winner Selection
-- Upon expiration, active challenge entries freeze automatically.
-- Server-side functions determine the winner and update the leaderboard atomically before instantiating the subsequent challenge.
-- **Why?** Guarantees atomicity and data consistency across all user sessions without race conditions.
-
----
-
-## 🔄 Challenge Flow
+## 🔄 Meydan Okuma Akışı (Challenge Flow)
 
 ```text
 ┌───────────────────────────────────────────────┐
-│              Active Challenge                 │
-│         (Live Theme & Countdown)              │
+│              Aktif Challenge                  │
+│       (Canlı Tema & Server Countdown)         │
 └──────────────────────┬────────────────────────┘
                        │
                        ▼
 ┌───────────────────────────────────────────────┐
-│            Users Create Pixel Art             │
-│            (16x16 / 32x32 Canvas)             │
+│            Pixel Studio Çizim                 │
+│         (16x16 / 32x32 Dinamik Grid)          │
 └──────────────────────┬────────────────────────┘
                        │
                        ▼
 ┌───────────────────────────────────────────────┐
-│          Submissions Enter Gallery            │
-│         (Real-time Firestore Sync)            │
+│          Topluluk Galerisi & Oylama           │
+│         (Real-time Sync & Anti-Cheat)         │
 └──────────────────────┬────────────────────────┘
                        │
                        ▼
 ┌───────────────────────────────────────────────┐
-│               Community Voting                │
-│         (Server-Validated Votes)              │
+│        Cloud Function Cron Tetikleyici        │
+│          (Oy Sayımı & Kazanan İlanı)          │
 └──────────────────────┬────────────────────────┘
                        │
                        ▼
 ┌───────────────────────────────────────────────┐
-│              Challenge Expires                │
-│       (Trigger Cloud Function Schedule)       │
+│          Şampiyon Arşive Aktarılır            │
+│         Yeni Challenge Otomatik Başlar        │
 └──────────────────────┬────────────────────────┘
                        │
-                       ▼
-┌───────────────────────────────────────────────┐
-│              Winner Determined                │
-│         (Vote Tally & Result Stored)          │
-└──────────────────────┬────────────────────────┘
-                       │
-                       ▼
-┌───────────────────────────────────────────────┐
-│             New Challenge Created             │
-│          (Cycle Repeats Continuously)         │
-└──────────────────────┬────────────────────────┘
-                       │
-                       └────────► [ Active Challenge ]
+                       └────────► [ Yeni Döngü ]
 ```
 
 ---
 
-## 🔥 Firebase Architecture
+## 📜 Lisans
 
-```text
-├── React Native Client (Expo)
-│   ├── Interactive Pixel Editor & Canvas
-│   ├── Real-time Firestore Listeners (Live Feed)
-│   └── Optimistic UI Updates & Navigation
-│
-├── Cloud Firestore
-│   ├── /challenges (Active & Historical metadata)
-│   ├── /submissions (Artwork pixel data & metadata)
-│   └── /votes (User-vote relations & tallies)
-│
-└── Firebase Cloud Functions
-    ├── Scheduled Challenge Expiration & Transition
-    ├── Winner Calculation & Ledger Write
-    └── Server-side Vote Validation
-```
-
----
-
-## 📁 Project Structure
-
-```text
-pixel-art-challenge/
-├── app/                  # Expo Router file-based screens & navigation
-│   ├── (tabs)/           # Tab-based main navigation routes
-│   └── _layout.tsx       # Root layout & context providers
-├── components/           # Reusable UI & canvas components
-│   ├── editor/           # Pixel canvas, palette & tools
-│   └── gallery/          # Submission cards & voting buttons
-├── constants/            # Theme colors, palette presets & typography
-├── hooks/                # Custom React hooks (auth, canvas, timers)
-├── functions/            # Firebase Cloud Functions (backend logic)
-├── assets/               # Local media, icons & screenshots
-│   └── screenshots/      # README application previews
-├── .env                  # Local Firebase environment variables (ignored)
-└── package.json          # Project dependencies & scripts
-```
-
----
-
-## 🔐 Environment & Security
-
-- **Public Client Variables:** Variables prefixed with `EXPO_PUBLIC_` are bundled securely for client-side Firebase initialization.
-- **Rule Enforcement:** Direct database mutations are protected by Firestore Security Rules.
-- **Sensitive Operations:** Round transitions and tally computations run exclusively in trusted Cloud Function environments.
-
----
-
-## 📜 License
-
-Distributed under the **MIT License**. Developed as part of a React Native software engineering task.
+Bu proje **MIT** lisansı ile sunulmaktadır.
