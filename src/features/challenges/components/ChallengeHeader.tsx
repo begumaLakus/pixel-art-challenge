@@ -6,7 +6,16 @@ import { CyberArcade } from '@/constants/theme';
 
 export const ChallengeHeader = memo(() => (
   <View style={styles.header}>
-    <Pressable onPress={() => router.back()} style={styles.backButton}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Geri dön"
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      onPress={() => router.back()}
+      style={({ pressed }) => [
+        styles.backButton,
+        pressed && styles.backButtonPressed,
+      ]}
+    >
       <Text style={styles.backText}>← ARENA</Text>
     </Pressable>
 
@@ -30,12 +39,16 @@ const styles = StyleSheet.create({
 
   backButton: {
     paddingVertical: 8,
-    paddingRight: 12,
+    paddingRight: 16,
+  },
+
+  backButtonPressed: {
+    opacity: 0.6,
   },
 
   backText: {
     color: CyberArcade.secondaryText,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '900',
     letterSpacing: 1,
   },
@@ -43,9 +56,9 @@ const styles = StyleSheet.create({
   headerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-    borderRadius: 7,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
     backgroundColor: CyberArcade.mintGlow,
     borderWidth: 1,
     borderColor: 'rgba(0, 245, 212, 0.25)',
@@ -61,7 +74,7 @@ const styles = StyleSheet.create({
 
   headerBadgeText: {
     color: CyberArcade.mint,
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '900',
     letterSpacing: 1,
   },

@@ -8,12 +8,8 @@ interface ArcadeMascotStageProps {
   themeColor: string;
 }
 
-/**
- * Salt dekoratif arcade sahnesi. Bu component sadece aktif bir challenge
- * varken mount edildiği için (bkz. ChallengeScreen) animasyonu koşulsuz
- * "active" başlatabiliriz; challenge null olduğunda zaten hiç render
- * edilmiyor.
- */
+
+ 
 export const ArcadeMascotStage = memo(({ themeColor }: ArcadeMascotStageProps) => {
   const { translateX, translateY, opacity } = useMascotAnimation(true);
 
@@ -90,7 +86,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 7,
+    gap: 8,
   },
 
   stageDot: {
@@ -103,7 +99,7 @@ const styles = StyleSheet.create({
 
   stageLabelText: {
     color: CyberArcade.mutedText,
-    fontSize: 7,
+    fontSize: 8,
     fontWeight: '900',
     letterSpacing: 1.6,
   },

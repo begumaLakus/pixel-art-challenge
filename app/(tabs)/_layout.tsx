@@ -4,7 +4,7 @@ import { StyleSheet } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { CyberArcade } from '@/constants/theme';
+import { CyberArcade, Radius } from '@/constants/theme';
 
 export default function TabLayout() {
   return (
@@ -65,19 +65,21 @@ const styles = StyleSheet.create({
 
     borderTopWidth: 1,
     borderTopColor: CyberArcade.border,
+    borderTopLeftRadius: Radius.lg,
+    borderTopRightRadius: Radius.lg,
 
-    paddingTop: 7,
-    paddingBottom: 9,
+    paddingTop: 8,
+    paddingBottom: 10,
 
     elevation: 0,
 
-    shadowColor: CyberArcade.magenta,
+    shadowColor: CyberArcade.shadowColor,
     shadowOffset: {
       width: 0,
-      height: -4,
+      height: -6,
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
+    shadowOpacity: 0.24,
+    shadowRadius: 18,
   },
 
   tabBarLabel: {

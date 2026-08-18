@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CyberArcade } from '@/constants/theme';
+import { CyberArcade, Elevation, Radius, Spacing, Typography } from '@/constants/theme';
 
 import { createSubmission } from '../../submission/services/submissionService';
 import { PixelGrid } from '../components/PixelGrid';
@@ -96,37 +96,91 @@ export const PixelEditorScreen = ({
 }: PixelEditorScreenProps) => {
   const insets = useSafeAreaInsets();
 
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     pixels,
     selectedColor,
     resolution,
-    setSelectedColor,
+    tool,
+    canUndo,
+    hasContent,
+    selectColor,
+    setTool,
     setResolution,
-    paintPixel,
-    resetPixels,
+    paintPixels,
+    beginStroke,
+    endStroke,
+    undo,
+    clearAll,
   } = usePixelEditor();
 
-  const handleResolutionChange = (
-    newResolution: PixelResolution,
-  ): void => {
-    setResolution(newResolution);
+  const isEraseActive = tool === 'erase';
+
+  const handleResolutionChange = (newResolution: PixelResolution): void => {
+    if (isSubmitting || newResolution === resolution) {
+      return;
+    }
+
+    if (!hasContent) {
+      setResolution(newResolution);
+      return;
+    }
+
+    Alert.alert(
+      'Çözünürlüğü Değiştir',
+      'Çözünürlüğü değiştirmek mevcut çizimini silecek. Devam edilsin mi?',
+      [
+        {
+          text: 'Vazgeç',
+          style: 'cancel',
+        },
+        {
+          text: 'Değiştir',
+          style: 'destructive',
+          onPress: () => setResolution(newResolution),
+        },
+      ],
+    );
   };
 
-  /*
-   * SİLGİ:
-   *
-   * Burada klasik tek pixel silgisi kullanmıyoruz.
-   * Kullanıcı silgiye bastığında bütün çalışma temizleniyor.
-   */
-  const handleErase = (): void => {
+  const handleToggleEraser = (): void => {
     if (isSubmitting) {
       return;
     }
 
-    resetPixels();
+    setTool(isEraseActive ? 'paint' : 'erase');
+  };
+
+  const handleUndo = (): void => {
+    if (isSubmitting || !canUndo) {
+      return;
+    }
+
+    undo();
+  };
+
+  
+  const handleClearAll = (): void => {
+    if (isSubmitting || !hasContent) {
+      return;
+    }
+
+    Alert.alert(
+      'Tümünü Temizle',
+      'Çizim tahtasındaki her şey silinecek. Emin misin?',
+      [
+        {
+          text: 'Vazgeç',
+          style: 'cancel',
+        },
+        {
+          text: 'Temizle',
+          style: 'destructive',
+          onPress: clearAll,
+        },
+      ],
+    );
   };
 
   const handleSubmit = async (): Promise<void> => {
@@ -159,10 +213,7 @@ export const PixelEditorScreen = ({
         },
       );
     } catch (error) {
-      console.error(
-        'Submission oluşturulamadı:',
-        error,
-      );
+      console.error('Submission oluşturulamadı:', error);
 
       const message =
         error instanceof Error
@@ -176,24 +227,12 @@ export const PixelEditorScreen = ({
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          paddingBottom: insets.bottom,
-        },
-      ]}
-    >
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       {/* HEADER */}
-      <View
-        style={[
-          styles.header,
-          {
-            paddingTop: insets.top + 8,
-          },
-        ]}
-      >
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Arenaya dön"
           onPress={() => router.back()}
           style={({ pressed }) => [
             styles.backButton,
@@ -201,18 +240,11 @@ export const PixelEditorScreen = ({
           ]}
           hitSlop={10}
         >
-          <Text style={styles.backButtonText}>
-            ←
-          </Text>
-
-          <Text style={styles.backButtonLabel}>
-            ARENA
-          </Text>
+          <Text style={styles.backButtonText}>←</Text>
+          <Text style={styles.backButtonLabel}>ARENA</Text>
         </Pressable>
 
-        <Text style={styles.headerTitle}>
-          PIXEL EDITOR
-        </Text>
+        <Text style={styles.headerTitle}>PIXEL EDITOR</Text>
 
         <View style={styles.headerSpacer} />
       </View>
@@ -223,14 +255,16 @@ export const PixelEditorScreen = ({
           <View style={styles.canvasLabelDot} />
 
           <Text style={styles.canvasLabelText}>
-            DRAWING BOARD
+            {isEraseActive ? 'ERASE MODE' : 'DRAWING BOARD'}
           </Text>
         </View>
 
         <PixelGrid
           pixels={pixels}
           resolution={resolution}
-          onPixelPress={paintPixel}
+          onStrokeStart={beginStroke}
+          onStrokeEnd={endStroke}
+          onPaintPixels={paintPixels}
         />
       </View>
 
@@ -239,47 +273,39 @@ export const PixelEditorScreen = ({
         {/* PALETTE HEADER */}
         <View style={styles.paletteHeader}>
           <View>
-            <Text style={styles.paletteTitle}>
-              RENK PALETİ
-            </Text>
-
-            <Text style={styles.paletteSubtitle}>
-              Bir renk seç
-            </Text>
+            <Text style={styles.paletteTitle}>RENK PALETİ</Text>
+            <Text style={styles.paletteSubtitle}>Bir renk seç</Text>
           </View>
 
           <View style={styles.selectedColorWrapper}>
             <View
               style={[
                 styles.selectedColorPreview,
-                {
-                  backgroundColor: selectedColor,
-                },
+                { backgroundColor: selectedColor },
               ]}
             />
 
-            <Text style={styles.selectedColorText}>
-              {selectedColor}
-            </Text>
+            <Text style={styles.selectedColorText}>{selectedColor}</Text>
           </View>
         </View>
 
         {/* COLOR PALETTE */}
         <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.palette}
+          style={styles.paletteScroll}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.paletteGrid}
         >
           {PALETTE.map((color) => (
             <Pressable
               key={color}
-              onPress={() => setSelectedColor(color)}
+              onPress={() => selectColor(color)}
+              accessibilityRole="button"
+              accessibilityLabel={`Renk seç: ${color}`}
               style={({ pressed }) => [
                 styles.color,
-                {
-                  backgroundColor: color,
-                },
+                { backgroundColor: color },
                 selectedColor === color &&
+                  !isEraseActive &&
                   styles.selectedColor,
                 pressed && styles.colorPressed,
               ]}
@@ -291,35 +317,29 @@ export const PixelEditorScreen = ({
         <View style={styles.controls}>
           {/* RESOLUTION */}
           <View style={styles.resolutionContainer}>
-            <Text style={styles.controlLabel}>
-              GRID
-            </Text>
+            <Text style={styles.controlLabel}>GRID</Text>
 
             <View style={styles.resolutionButtons}>
               {[16, 32].map((size) => {
-                const isSelected =
-                  resolution === size;
+                const isSelected = resolution === size;
 
                 return (
                   <Pressable
                     key={size}
                     onPress={() =>
-                      handleResolutionChange(
-                        size as PixelResolution,
-                      )
+                      handleResolutionChange(size as PixelResolution)
                     }
+                    disabled={isSubmitting}
                     style={({ pressed }) => [
                       styles.resolutionButton,
-                      isSelected &&
-                        styles.selectedResolution,
+                      isSelected && styles.selectedResolution,
                       pressed && styles.pressed,
                     ]}
                   >
                     <Text
                       style={[
                         styles.resolutionText,
-                        isSelected &&
-                          styles.selectedResolutionText,
+                        isSelected && styles.selectedResolutionText,
                       ]}
                     >
                       {size}×{size}
@@ -332,50 +352,70 @@ export const PixelEditorScreen = ({
 
           {/* ACTION BUTTONS */}
           <View style={styles.actionButtons}>
-            {/* SİLGİ / TÜMÜNÜ TEMİZLE */}
+            {/* GERİ AL */}
             <Pressable
-              onPress={handleErase}
-              disabled={isSubmitting}
+              onPress={handleUndo}
+              disabled={isSubmitting || !canUndo}
+              accessibilityRole="button"
+              accessibilityLabel="Geri al"
               style={({ pressed }) => [
-                styles.eraseButton,
-                pressed &&
-                  styles.eraseButtonPressed,
-                isSubmitting &&
-                  styles.disabledButton,
+                styles.toolButton,
+                pressed && styles.toolButtonPressed,
+                (isSubmitting || !canUndo) && styles.toolButtonDisabled,
               ]}
             >
-              <Text style={styles.eraseIcon}>
-                🧹
-              </Text>
+              <Text style={styles.toolButtonIcon}>↺</Text>
+            </Pressable>
 
-              <Text style={styles.eraseButtonText}>
-                Silgi
-              </Text>
+            {/* SİLGİ (tek pixel) */}
+            <Pressable
+              onPress={handleToggleEraser}
+              disabled={isSubmitting}
+              accessibilityRole="button"
+              accessibilityLabel="Silgi aracı"
+              accessibilityState={{ selected: isEraseActive }}
+              style={({ pressed }) => [
+                styles.toolButton,
+                isEraseActive && styles.toolButtonActive,
+                pressed && styles.toolButtonPressed,
+                isSubmitting && styles.toolButtonDisabled,
+              ]}
+            >
+              <Text style={styles.toolButtonIcon}>🧽</Text>
+            </Pressable>
+
+            {/* TÜMÜNÜ TEMİZLE */}
+            <Pressable
+              onPress={handleClearAll}
+              disabled={isSubmitting || !hasContent}
+              accessibilityRole="button"
+              accessibilityLabel="Tümünü temizle"
+              style={({ pressed }) => [
+                styles.toolButton,
+                pressed && styles.toolButtonPressed,
+                (isSubmitting || !hasContent) && styles.toolButtonDisabled,
+              ]}
+            >
+              <Text style={styles.toolButtonIcon}>🧹</Text>
             </Pressable>
 
             {/* SUBMIT */}
             <Pressable
               onPress={handleSubmit}
               disabled={isSubmitting}
+              accessibilityRole="button"
+              accessibilityLabel="Gönder"
               style={({ pressed }) => [
                 styles.submitButton,
-                pressed &&
-                  styles.submitButtonPressed,
-                isSubmitting &&
-                  styles.disabledButton,
+                pressed && styles.submitButtonPressed,
+                isSubmitting && styles.disabledButton,
               ]}
             >
               <Text style={styles.submitButtonText}>
-                {isSubmitting
-                  ? 'Gönderiliyor...'
-                  : 'Gönder'}
+                {isSubmitting ? 'Gönderiliyor...' : 'Gönder'}
               </Text>
 
-              {!isSubmitting && (
-                <Text style={styles.submitArrow}>
-                  →
-                </Text>
-              )}
+              {!isSubmitting && <Text style={styles.submitArrow}>→</Text>}
             </Pressable>
           </View>
         </View>
@@ -385,13 +425,7 @@ export const PixelEditorScreen = ({
 };
 
 const styles = StyleSheet.create({
-  /*
-   * ANA EKRAN
-   *
-   * Artık eski #F3EFE8 yok.
-   * HomeScreen'deki CyberArcade.background
-   * ile aynı tema kullanılıyor.
-   */
+  /* ANA EKRAN */
   container: {
     flex: 1,
     backgroundColor: CyberArcade.background,
@@ -402,10 +436,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.sm + 4,
     backgroundColor: CyberArcade.background,
   },
 
@@ -423,7 +455,7 @@ const styles = StyleSheet.create({
   },
 
   backButtonLabel: {
-    marginLeft: 6,
+    marginLeft: Spacing.xs + 2,
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 1.2,
@@ -434,7 +466,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 1.5,
-    color: CyberArcade.white,
+    color: CyberArcade.textPrimary,
+    fontFamily: Typography.mono,
   },
 
   headerSpacer: {
@@ -445,42 +478,30 @@ const styles = StyleSheet.create({
   canvasArea: {
     flex: 1,
     minHeight: 0,
-
     alignItems: 'center',
     justifyContent: 'center',
-
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: Spacing.sm + 2,
     backgroundColor: CyberArcade.background,
   },
 
   canvasLabel: {
     flexDirection: 'row',
     alignItems: 'center',
-
-    marginBottom: 10,
-
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-
-    borderRadius: 7,
-
-    backgroundColor:
-      'rgba(255, 183, 3, 0.10)',
-
+    marginBottom: Spacing.sm + 2,
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: Spacing.xs + 1,
+    borderRadius: Radius.sm - 1,
+    backgroundColor: CyberArcade.goldGlow,
     borderWidth: 1,
-    borderColor:
-      'rgba(255, 183, 3, 0.22)',
+    borderColor: 'rgba(255, 183, 3, 0.22)',
   },
 
   canvasLabelDot: {
     width: 5,
     height: 5,
     borderRadius: 3,
-
-    marginRight: 6,
-
+    marginRight: Spacing.xs + 2,
     backgroundColor: CyberArcade.gold,
   },
 
@@ -494,26 +515,14 @@ const styles = StyleSheet.create({
   /* CONTROL PANEL */
   controlPanel: {
     backgroundColor: CyberArcade.surface,
-
     borderTopWidth: 1,
     borderTopColor: CyberArcade.border,
-
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-
-    paddingTop: 14,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -5,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 14,
-
-    elevation: 10,
+    borderTopLeftRadius: Radius.xl + 2,
+    borderTopRightRadius: Radius.xl + 2,
+    paddingTop: Spacing.md - 2,
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.sm + 4,
+    ...Elevation.raised,
   },
 
   /* PALETTE */
@@ -521,12 +530,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-
-    marginBottom: 9,
+    marginBottom: Spacing.sm + 1,
   },
 
   paletteTitle: {
-    color: CyberArcade.white,
+    color: CyberArcade.textPrimary,
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 1.2,
@@ -546,11 +554,8 @@ const styles = StyleSheet.create({
   selectedColorPreview: {
     width: 18,
     height: 18,
-
-    marginRight: 7,
-
-    borderRadius: 5,
-
+    marginRight: Spacing.xs + 3,
+    borderRadius: Radius.sm - 3,
     borderWidth: 1,
     borderColor: CyberArcade.border,
   },
@@ -561,34 +566,29 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  palette: {
-    alignItems: 'center',
-    paddingVertical: 4,
-    paddingRight: 8,
+  paletteScroll: {
+    maxHeight: 132,
+  },
+
+  paletteGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs + 3,
+    paddingBottom: Spacing.xs,
   },
 
   color: {
-    width: 30,
-    height: 30,
-
-    marginRight: 7,
-
-    borderRadius: 7,
-
+    width: 28,
+    height: 28,
+    borderRadius: Radius.sm - 1,
     borderWidth: 1,
-    borderColor:
-      'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
 
   selectedColor: {
     borderWidth: 3,
     borderColor: CyberArcade.gold,
-
-    transform: [
-      {
-        scale: 1.08,
-      },
-    ],
+    transform: [{ scale: 1.08 }],
   },
 
   colorPressed: {
@@ -600,13 +600,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-
-    marginTop: 10,
+    marginTop: Spacing.sm + 2,
   },
 
   controlLabel: {
-    marginBottom: 5,
-
+    marginBottom: Spacing.xs + 1,
     color: CyberArcade.mutedText,
     fontSize: 8,
     fontWeight: '900',
@@ -619,25 +617,20 @@ const styles = StyleSheet.create({
 
   resolutionButtons: {
     flexDirection: 'row',
-    gap: 6,
+    gap: Spacing.xs + 2,
   },
 
   resolutionButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 11,
-
-    borderRadius: 9,
-
-    backgroundColor:
-      CyberArcade.surfacePressed,
-
+    paddingVertical: Spacing.xs + 4,
+    paddingHorizontal: Spacing.sm + 3,
+    borderRadius: Radius.sm + 1,
+    backgroundColor: CyberArcade.surfaceInset,
     borderWidth: 1,
     borderColor: CyberArcade.border,
   },
 
   selectedResolution: {
     backgroundColor: CyberArcade.purple,
-
     borderColor: CyberArcade.purple,
   },
 
@@ -655,76 +648,55 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     alignItems: 'center',
-
-    gap: 7,
-
-    marginLeft: 10,
+    gap: Spacing.xs + 2,
+    marginLeft: Spacing.sm + 2,
   },
 
-  /* SİLGİ */
-  eraseButton: {
-    flexDirection: 'row',
+  /* TOOL BUTTONS (Geri Al / Silgi / Temizle) */
+  toolButton: {
+    width: 36,
+    height: 36,
     alignItems: 'center',
-
-    paddingVertical: 9,
-    paddingHorizontal: 11,
-
-    borderRadius: 9,
-
-    backgroundColor:
-      'rgba(255, 183, 3, 0.10)',
-
+    justifyContent: 'center',
+    borderRadius: Radius.sm + 1,
+    backgroundColor: CyberArcade.surfaceInset,
     borderWidth: 1,
-    borderColor:
-      'rgba(255, 183, 3, 0.30)',
+    borderColor: CyberArcade.border,
   },
 
-  eraseButtonPressed: {
-    backgroundColor:
-      'rgba(255, 183, 3, 0.18)',
+  toolButtonActive: {
+    backgroundColor: CyberArcade.purple,
+    borderColor: CyberArcade.purple,
   },
 
-  eraseIcon: {
-    fontSize: 13,
-    marginRight: 5,
+  toolButtonPressed: {
+    opacity: 0.7,
   },
 
-  eraseButtonText: {
-    color: CyberArcade.gold,
-    fontSize: 11,
-    fontWeight: '800',
+  toolButtonDisabled: {
+    opacity: 0.35,
+  },
+
+  toolButtonIcon: {
+    fontSize: 15,
   },
 
   /* GÖNDER */
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
-
-    paddingVertical: 9,
-    paddingHorizontal: 13,
-
-    borderRadius: 9,
-
+    paddingVertical: Spacing.sm + 1,
+    paddingHorizontal: Spacing.sm + 5,
+    borderRadius: Radius.sm + 1,
     backgroundColor: CyberArcade.magenta,
-
-    shadowColor: CyberArcade.magenta,
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.14)',
+    ...Elevation.glowMagenta,
   },
 
   submitButtonPressed: {
-    opacity: 0.8,
-    transform: [
-      {
-        translateY: 1,
-      },
-    ],
+    opacity: 0.9,
+    transform: [{ scale: 0.97 }],
   },
 
   submitButtonText: {
@@ -734,8 +706,7 @@ const styles = StyleSheet.create({
   },
 
   submitArrow: {
-    marginLeft: 5,
-
+    marginLeft: Spacing.xs + 1,
     color: CyberArcade.white,
     fontSize: 15,
     fontWeight: '900',

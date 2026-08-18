@@ -19,6 +19,7 @@ interface ChallengeDoc {
   winnerSubmissionId: string | null;
   createdAt: Timestamp;
   completedAt: Timestamp | null;
+  gridSiz:number;
 }
 
 const THEMES = [

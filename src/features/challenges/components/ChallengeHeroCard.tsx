@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { CyberArcade } from '@/constants/theme';
+import { CyberArcade, Typography } from '@/constants/theme';
 import type { ChallengeThemeAsset } from '../constants/challengeThemes';
 import { useCountdown } from '../hooks/useCountdown';
 import type { Challenge } from '../types/challenge';
@@ -11,11 +11,6 @@ interface ChallengeHeroCardProps {
   themeAsset: ChallengeThemeAsset;
 }
 
-/**
- * Saniyede bir tick atan tek yer burasıdır (useCountdown). Bu sayede
- * ChallengeScreen ve kardeş component'ler (ActionsPanel, InfoRow, mascot)
- * her saniye yeniden render olmaz — re-render sadece bu karta izole edilir.
- */
 export const ChallengeHeroCard = memo(
   ({ challenge, themeAsset }: ChallengeHeroCardProps) => {
     const { formatted, hasEnded } = useCountdown(challenge.endsAt);
@@ -76,13 +71,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: CyberArcade.surface,
     borderWidth: 1,
-    borderRadius: 18,
-    padding: 18,
-    shadowColor: CyberArcade.magenta,
+    borderRadius: 20,
+    padding: 16,
+    shadowColor: CyberArcade.shadowColor,
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 7,
+    shadowOpacity: 0.28,
+    shadowRadius: 20,
+    elevation: 6,
   },
 
   heroOrb: {
@@ -104,9 +99,9 @@ const styles = StyleSheet.create({
   themeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 9,
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 7,
+    borderRadius: 8,
     backgroundColor: CyberArcade.background,
     borderWidth: 1,
     borderColor: CyberArcade.border,
@@ -138,43 +133,45 @@ const styles = StyleSheet.create({
 
   liveStatusText: {
     color: CyberArcade.magenta,
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '900',
     letterSpacing: 1,
   },
 
   missionLabel: {
-    marginTop: 26,
+    marginTop: 24,
     color: CyberArcade.mint,
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '900',
     letterSpacing: 1.8,
   },
 
   title: {
-    marginTop: 5,
-    color: CyberArcade.white,
-    fontSize: 30,
-    lineHeight: 35,
-    fontWeight: '900',
-    letterSpacing: -0.8,
+    marginTop: 6,
+    color: CyberArcade.textPrimary,
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+    fontFamily: Typography.mono,
   },
 
   description: {
-    marginTop: 10,
+    marginTop: 12,
     color: CyberArcade.secondaryText,
-    fontSize: 13,
-    lineHeight: 20,
+    fontSize: 14,
+    lineHeight: 21,
     fontWeight: '500',
+    fontFamily: Typography.system,
   },
 
   timerPanel: {
-    marginTop: 20,
+    marginTop: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 13,
-    borderRadius: 12,
+    padding: 16,
+    borderRadius: 14,
     backgroundColor: CyberArcade.background,
     borderWidth: 1,
     borderColor: CyberArcade.border,
@@ -182,7 +179,7 @@ const styles = StyleSheet.create({
 
   timerLabel: {
     color: CyberArcade.mutedText,
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '900',
     letterSpacing: 1.2,
     marginBottom: 4,
@@ -193,6 +190,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '900',
     letterSpacing: 1,
+    fontFamily: Typography.mono,
   },
 
   timerEnded: {
@@ -200,9 +198,9 @@ const styles = StyleSheet.create({
   },
 
   timerIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: CyberArcade.magentaGlow,

@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     color: CyberArcade.mutedText,
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '900',
     letterSpacing: 1.5,
   },

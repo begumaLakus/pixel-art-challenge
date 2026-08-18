@@ -7,6 +7,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import {
   SafeAreaProvider,
@@ -68,52 +69,59 @@ function AuthGate({
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <ThemeProvider value={DarkTheme}>
-        <AuthGate>
-          <Stack
-            screenOptions={{
-              contentStyle: {
-                backgroundColor: '#0A0714',
-              },
-              headerShown: false,
-            }}
-          >
-            <Stack.Screen
-              name="(tabs)"
-              options={{
+ 
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <ThemeProvider value={DarkTheme}>
+          <AuthGate>
+            <Stack
+              screenOptions={{
+                contentStyle: {
+                  backgroundColor: '#0A0714',
+                },
                 headerShown: false,
               }}
-            />
+            >
+              <Stack.Screen
+                name="(tabs)"
+                options={{
+                  headerShown: false,
+                }}
+              />
 
-            <Stack.Screen
-              name="auth"
-              options={{
-                headerShown: false,
-              }}
-            />
+              <Stack.Screen
+                name="auth"
+                options={{
+                  headerShown: false,
+                }}
+              />
 
-            <Stack.Screen
-              name="modal"
-              options={{
-                presentation: 'modal',
-                headerShown: false,
-              }}
-            />
-          </Stack>
-        </AuthGate>
+              <Stack.Screen
+                name="modal"
+                options={{
+                  presentation: 'modal',
+                  headerShown: false,
+                }}
+              />
+            </Stack>
+          </AuthGate>
 
-        <StatusBar
-          style="light"
-          translucent
-          backgroundColor="transparent"
-        />
-      </ThemeProvider>
-    </SafeAreaProvider>
+          <StatusBar
+            style="light"
+            translucent
+            backgroundColor="transparent"
+          />
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+
   loadingContainer: {
     flex: 1,
     backgroundColor: '#0A0714',

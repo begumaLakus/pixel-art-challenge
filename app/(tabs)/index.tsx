@@ -11,7 +11,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CyberArcade } from '@/constants/theme';
+import {
+  CyberArcade,
+  Elevation,
+  Radius,
+  Spacing,
+  Typography,
+} from '@/constants/theme';
 import { logoutUser } from '@/src/features/auth/services/authServices';
 
 export default function HomeScreen() {
@@ -46,16 +52,13 @@ export default function HomeScreen() {
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: insets.top + 12,
-            paddingBottom: insets.bottom + 32,
+            paddingTop: insets.top + Spacing.sm + 4,
+            paddingBottom: insets.bottom + Spacing.xl,
           },
         ]}
       >
         <View
-          style={[
-            styles.wrapper,
-            { paddingHorizontal: horizontalPadding },
-          ]}
+          style={[styles.wrapper, { paddingHorizontal: horizontalPadding }]}
         >
           {/* HEADER */}
           <View style={styles.header}>
@@ -99,6 +102,8 @@ export default function HomeScreen() {
 
           {/* ACTIVE CHALLENGE */}
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Aktif challenge'a git"
             onPress={() => router.push('/challenge')}
             style={({ pressed }) => [
               styles.heroCard,
@@ -174,6 +179,8 @@ export default function HomeScreen() {
           {/* SECONDARY CARDS */}
           <View style={styles.grid}>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Arşivi aç"
               onPress={() => router.push('/archive')}
               style={({ pressed }) => [
                 styles.smallCard,
@@ -205,6 +212,8 @@ export default function HomeScreen() {
             </Pressable>
 
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Pixel studio'ya git"
               onPress={() => router.push('/challenge')}
               style={({ pressed }) => [
                 styles.smallCard,
@@ -242,7 +251,12 @@ export default function HomeScreen() {
 
             <Text style={styles.footerText}>NEON PIXEL NETWORK</Text>
 
-            <Pressable onPress={handleLogout} hitSlop={10}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Oturumu kapat"
+              onPress={handleLogout}
+              hitSlop={10}
+            >
               <Text style={styles.logoutText}>OTURUMU KAPAT</Text>
             </Pressable>
           </View>
@@ -272,17 +286,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -90,
     right: -80,
-    width: 250,
-    height: 250,
-    borderRadius: 125,
+    width: 256,
+    height: 256,
+    borderRadius: 128,
     backgroundColor: CyberArcade.purple,
     opacity: 0.12,
   },
 
   glowBottomLeft: {
     position: 'absolute',
-    bottom: -100,
-    left: -100,
+    bottom: -96,
+    left: -96,
     width: 280,
     height: 280,
     borderRadius: 140,
@@ -291,7 +305,7 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    marginBottom: 20,
+    marginBottom: Spacing.lg - 4,
   },
 
   statusRow: {
@@ -299,7 +313,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: Spacing.md,
   },
 
   brandBadge: {
@@ -309,11 +323,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    paddingHorizontal: 9,
-    paddingVertical: 6,
+    paddingHorizontal: Spacing.sm + 1,
+    paddingVertical: Spacing.xs + 2,
     borderWidth: 1,
     borderColor: CyberArcade.border,
-    borderRadius: 8,
+    borderRadius: Radius.sm,
     backgroundColor: CyberArcade.surface,
   },
 
@@ -322,7 +336,7 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: CyberArcade.magenta,
-    marginRight: 7,
+    marginRight: Spacing.xs + 3,
   },
 
   brandText: {
@@ -338,10 +352,10 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-    marginLeft: 8,
-    borderRadius: 8,
+    paddingHorizontal: Spacing.sm + 1,
+    paddingVertical: Spacing.xs + 2,
+    marginLeft: Spacing.sm,
+    borderRadius: Radius.sm,
     backgroundColor: CyberArcade.mintGlow,
     borderWidth: 1,
     borderColor: 'rgba(0, 245, 212, 0.25)',
@@ -352,7 +366,7 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: CyberArcade.mint,
-    marginRight: 6,
+    marginRight: Spacing.xs + 2,
   },
 
   liveText: {
@@ -364,11 +378,12 @@ const styles = StyleSheet.create({
 
   title: {
     maxWidth: '100%',
-    color: CyberArcade.white,
+    color: CyberArcade.textPrimary,
     fontSize: 34,
     lineHeight: 38,
-    fontWeight: '900',
+    fontWeight: '800',
     letterSpacing: -1,
+    fontFamily: Typography.mono,
   },
 
   titleAccent: {
@@ -376,7 +391,7 @@ const styles = StyleSheet.create({
   },
 
   subtitle: {
-    marginTop: 8,
+    marginTop: Spacing.sm,
     color: CyberArcade.secondaryText,
     fontSize: 13,
     lineHeight: 19,
@@ -386,25 +401,18 @@ const styles = StyleSheet.create({
   heroCard: {
     width: '100%',
     minHeight: 0,
-    borderRadius: 18,
+    borderRadius: Radius.xl,
     borderWidth: 1,
     borderColor: CyberArcade.magenta,
     backgroundColor: CyberArcade.surface,
     overflow: 'hidden',
-    padding: 16,
-    shadowColor: CyberArcade.magenta,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.18,
-    shadowRadius: 20,
-    elevation: 7,
+    padding: Spacing.md,
+    ...Elevation.glowMagenta,
   },
 
   heroCardPressed: {
-    transform: [{ translateY: 3 }],
-    shadowOpacity: 0.05,
+    transform: [{ scale: 0.99 }],
+    opacity: 0.94,
   },
 
   heroGlow: {
@@ -431,9 +439,9 @@ const styles = StyleSheet.create({
     minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 7,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs + 2,
+    borderRadius: Radius.sm,
     backgroundColor: CyberArcade.magentaGlow,
     borderWidth: 1,
     borderColor: 'rgba(255, 42, 133, 0.35)',
@@ -444,7 +452,7 @@ const styles = StyleSheet.create({
     height: 5,
     borderRadius: 3,
     backgroundColor: CyberArcade.magenta,
-    marginRight: 6,
+    marginRight: Spacing.xs + 2,
   },
 
   heroBadgeText: {
@@ -461,14 +469,15 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 1,
-    marginLeft: 8,
+    marginLeft: Spacing.sm,
+    fontFamily: Typography.mono,
   },
 
   heroMain: {
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: Spacing.lg - 4,
   },
 
   heroMainCompact: {
@@ -479,7 +488,7 @@ const styles = StyleSheet.create({
   heroCopy: {
     flex: 1,
     minWidth: 0,
-    paddingRight: 12,
+    paddingRight: Spacing.sm + 4,
   },
 
   heroCopyCompact: {
@@ -491,30 +500,31 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 1.3,
-    marginBottom: 5,
+    marginBottom: Spacing.xs + 1,
   },
 
   heroTitle: {
-    color: CyberArcade.white,
+    color: CyberArcade.textPrimary,
     fontSize: 27,
     lineHeight: 31,
-    fontWeight: '900',
+    fontWeight: '800',
     letterSpacing: -0.5,
+    fontFamily: Typography.mono,
   },
 
   heroDescription: {
     color: CyberArcade.secondaryText,
     fontSize: 13,
     lineHeight: 19,
-    marginTop: 7,
+    marginTop: Spacing.xs + 3,
   },
 
   heroIconBox: {
     flexShrink: 0,
     width: 76,
     height: 76,
-    marginLeft: 4,
-    borderRadius: 14,
+    marginLeft: Spacing.xs,
+    borderRadius: Radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: CyberArcade.purpleGlow,
@@ -526,7 +536,7 @@ const styles = StyleSheet.create({
   heroIconBoxCompact: {
     width: 64,
     height: 64,
-    marginTop: 14,
+    marginTop: Spacing.md - 2,
     marginLeft: 0,
     alignSelf: 'flex-end',
   },
@@ -537,8 +547,8 @@ const styles = StyleSheet.create({
 
   heroFooter: {
     width: '100%',
-    marginTop: 18,
-    paddingTop: 13,
+    marginTop: Spacing.md + 2,
+    paddingTop: Spacing.sm + 5,
     borderTopWidth: 1,
     borderTopColor: CyberArcade.border,
     flexDirection: 'row',
@@ -559,13 +569,13 @@ const styles = StyleSheet.create({
     color: CyberArcade.magenta,
     fontSize: 21,
     fontWeight: '900',
-    marginLeft: 8,
+    marginLeft: Spacing.sm,
   },
 
   grid: {
     width: '100%',
-    marginTop: 12,
-    gap: 12,
+    marginTop: Spacing.md - 4,
+    gap: Spacing.sm + 4,
   },
 
   smallCard: {
@@ -573,15 +583,16 @@ const styles = StyleSheet.create({
     minHeight: 88,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 14,
+    padding: Spacing.sm + 4,
+    borderRadius: Radius.lg,
     borderWidth: 1,
     borderColor: CyberArcade.border,
     backgroundColor: CyberArcade.surface,
+    ...Elevation.card,
   },
 
   smallCardPressed: {
-    transform: [{ translateY: 3 }],
+    transform: [{ scale: 0.98 }],
     backgroundColor: CyberArcade.surfacePressed,
   },
 
@@ -589,7 +600,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     width: 46,
     height: 46,
-    borderRadius: 11,
+    borderRadius: Radius.md - 1,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -603,7 +614,7 @@ const styles = StyleSheet.create({
   smallCardContent: {
     flex: 1,
     minWidth: 0,
-    marginLeft: 11,
+    marginLeft: Spacing.sm + 3,
   },
 
   smallCardLabel: {
@@ -623,7 +634,7 @@ const styles = StyleSheet.create({
   },
 
   smallCardTitle: {
-    color: CyberArcade.white,
+    color: CyberArcade.textPrimary,
     fontSize: 15,
     lineHeight: 19,
     fontWeight: '800',
@@ -641,19 +652,20 @@ const styles = StyleSheet.create({
     color: CyberArcade.secondaryText,
     fontSize: 18,
     fontWeight: '800',
-    marginLeft: 8,
+    marginLeft: Spacing.sm,
   },
 
   footer: {
     width: '100%',
     alignItems: 'center',
+    marginTop: Spacing.md,
   },
 
   footerLine: {
     width: 40,
     height: 1,
     backgroundColor: CyberArcade.border,
-    marginBottom: 12,
+    marginBottom: Spacing.sm + 4,
   },
 
   footerText: {
@@ -668,6 +680,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 1,
-    marginTop: 14,
+    marginTop: Spacing.md - 2,
   },
 });

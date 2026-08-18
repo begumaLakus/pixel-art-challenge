@@ -23,7 +23,15 @@ export const ChallengeEmptyState = memo(({ message }: ChallengeEmptyStateProps) 
           {message ?? 'Şu anda aktif bir challenge bulunmuyor.'}
         </Text>
 
-        <Pressable onPress={() => router.back()} style={styles.emptyButton}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Geri dön"
+          onPress={() => router.back()}
+          style={({ pressed }) => [
+            styles.emptyButton,
+            pressed && styles.emptyButtonPressed,
+          ]}
+        >
           <Text style={styles.emptyButtonText}>GERİ DÖN</Text>
         </Pressable>
       </View>
@@ -42,19 +50,19 @@ const styles = StyleSheet.create({
 
   glowTopRight: {
     position: 'absolute',
-    top: -90,
+    top: -88,
     right: -80,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
+    width: 256,
+    height: 256,
+    borderRadius: 128,
     backgroundColor: CyberArcade.purple,
     opacity: 0.12,
   },
 
   glowBottomLeft: {
     position: 'absolute',
-    bottom: -100,
-    left: -100,
+    bottom: -96,
+    left: -96,
     width: 280,
     height: 280,
     borderRadius: 140,
@@ -69,54 +77,63 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 18,
+    padding: 16,
   },
 
   emptyCard: {
     width: '100%',
     alignItems: 'center',
-    padding: 26,
-    borderRadius: 18,
+    padding: 24,
+    borderRadius: 20,
     backgroundColor: CyberArcade.surface,
     borderWidth: 1,
     borderColor: CyberArcade.border,
+    shadowColor: CyberArcade.shadowColor,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.24,
+    shadowRadius: 16,
+    elevation: 4,
   },
 
   emptyIcon: {
     color: CyberArcade.magenta,
-    fontSize: 34,
+    fontSize: 32,
     marginBottom: 12,
   },
 
   emptyTitle: {
-    color: CyberArcade.white,
-    fontSize: 15,
+    color: CyberArcade.textPrimary,
+    fontSize: 16,
     fontWeight: '900',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
     textAlign: 'center',
   },
 
   emptyText: {
     color: CyberArcade.secondaryText,
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 19,
     textAlign: 'center',
     marginTop: 8,
   },
 
   emptyButton: {
-    marginTop: 18,
-    paddingHorizontal: 18,
-    paddingVertical: 11,
-    borderRadius: 9,
+    marginTop: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: CyberArcade.magenta,
     backgroundColor: CyberArcade.magentaGlow,
   },
 
+  emptyButtonPressed: {
+    opacity: 0.8,
+  },
+
   emptyButtonText: {
     color: CyberArcade.magenta,
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '900',
     letterSpacing: 1,
   },

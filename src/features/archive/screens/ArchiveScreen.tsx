@@ -5,128 +5,68 @@ import {
   StyleSheet,
   Text,
   View,
-  useColorScheme,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AntiqueColors } from '@/constants/theme';
+import { CyberArcade, Elevation, Radius, Spacing } from '@/constants/theme';
 
 import { ArchiveCard } from '../components/ArchiveCard';
 import { useArchive } from '../hooks/useArchive';
 
+/**
+ * Arşiv vitrini: geçmiş challenge kazananları. Bu ekran "geçmiş/tarih"
+ * hissini vurgulamak için ana magenta yerine daha sakin bir "rose gold"
+ * vurgu rengi kullanıyor — diğer ekranlardan görsel olarak ayrışan ama
+ * aynı yüzey/gölge/boşluk sistemine (CyberArcade + Spacing/Radius/
+ * Elevation) sadık kalan bilinçli bir tercih.
+ */
+const ARCHIVE_ACCENT = '#E8A0BE';
+
 export const ArchiveScreen = () => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
 
-  const baseTheme =
-    AntiqueColors[isDark ? 'dark' : 'light'];
-
-  const theme = {
-    ...baseTheme,
-    pinkAccent: '#E0809D',
-    cardBg: isDark ? '#1A1625' : '#FFFFFF',
-    cardBorder: isDark ? '#2D223B' : '#F0E6ED',
-  };
-
-  const {
-    archivedChallenges,
-    loading,
-    error,
-    refresh,
-  } = useArchive();
+  const { archivedChallenges, loading, error, refresh } = useArchive();
 
   if (loading && archivedChallenges.length === 0) {
     return (
-      <View
-        style={[
-          styles.center,
-          {
-            backgroundColor: theme.background,
-            paddingTop: insets.top,
-          },
-        ]}
-      >
-        <ActivityIndicator
-          size="large"
-          color={theme.pinkAccent}
-        />
+      <View style={[styles.center, { paddingTop: insets.top }]}>
+        <ActivityIndicator size="large" color={ARCHIVE_ACCENT} />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View
-        style={[
-          styles.center,
-          {
-            backgroundColor: theme.background,
-            paddingTop: insets.top,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.errorText,
-            { color: theme.pinkAccent },
-          ]}
-        >
-          {error}
-        </Text>
+      <View style={[styles.center, { paddingTop: insets.top }]}>
+        <Text style={styles.errorText}>{error}</Text>
 
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Tekrar dene"
           onPress={refresh}
           style={({ pressed }) => [
             styles.retryButton,
-            {
-              borderColor: theme.pinkAccent,
-              opacity: pressed ? 0.7 : 1,
-            },
+            pressed && styles.retryButtonPressed,
           ]}
         >
-          <Text
-            style={[
-              styles.retryButtonText,
-              { color: theme.text },
-            ]}
-          >
-            Tekrar Dene
-          </Text>
+          <Text style={styles.retryButtonText}>Tekrar Dene</Text>
         </Pressable>
       </View>
     );
   }
 
   return (
-    <View
-      style={[
-        styles.screen,
-        { backgroundColor: theme.background },
-      ]}
-    >
+    <View style={styles.screen}>
       {/* BACKGROUND GLOWS */}
-      <View
-        pointerEvents="none"
-        style={[
-          styles.glowTopRight,
-          {
-            backgroundColor: theme.pinkAccent,
-          },
-        ]}
-      />
-
-      <View
-        pointerEvents="none"
-        style={styles.glowBottomLeft}
-      />
+      <View pointerEvents="none" style={styles.glowTopRight} />
+      <View pointerEvents="none" style={styles.glowBottomLeft} />
 
       <View
         style={[
           styles.container,
           {
-            paddingTop: insets.top + 16,
-            paddingBottom: Math.max(insets.bottom, 16),
+            paddingTop: insets.top + Spacing.md,
+            paddingBottom: Math.max(insets.bottom, Spacing.md),
           },
         ]}
       >
@@ -145,50 +85,23 @@ export const ArchiveScreen = () => {
             </View>
 
             <View style={styles.countBadge}>
-              <Text
-                style={styles.countBadgeText}
-                numberOfLines={1}
-              >
+              <Text style={styles.countBadgeText} numberOfLines={1}>
                 {archivedChallenges.length} Arena
               </Text>
             </View>
           </View>
-
-          
         </View>
 
         {/* CONTENT */}
         {archivedChallenges.length === 0 ? (
-          <View
-            style={[
-              styles.emptyContainer,
-              {
-                backgroundColor: theme.cardBg,
-                borderColor: theme.cardBorder,
-              },
-            ]}
-          >
-            <Text style={styles.emptyIcon}>
-              🗓️
-            </Text>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyIcon}>🗓️</Text>
 
-            <Text
-              style={[
-                styles.emptyTitle,
-                { color: theme.text },
-              ]}
-            >
-              Arşiv Henüz Boş
-            </Text>
+            <Text style={styles.emptyTitle}>Arşiv Henüz Boş</Text>
 
-            <Text
-              style={[
-                styles.emptyMessage,
-                { color: theme.placeholder },
-              ]}
-            >
-              Tamamlanan ilk meydan okumadan sonra
-              kazananlar burada sergilenecek.
+            <Text style={styles.emptyMessage}>
+              Tamamlanan ilk meydan okumadan sonra kazananlar burada
+              sergilenecek.
             </Text>
           </View>
         ) : (
@@ -197,9 +110,7 @@ export const ArchiveScreen = () => {
             keyExtractor={(item) => item.challenge.id}
             renderItem={({ item }) => (
               <View style={styles.cardWrapper}>
-                <ArchiveCard
-                  archivedChallenge={item}
-                />
+                <ArchiveCard archivedChallenge={item} />
               </View>
             )}
             contentContainerStyle={styles.list}
@@ -218,6 +129,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     position: 'relative',
+    backgroundColor: CyberArcade.background,
   },
 
   container: {
@@ -225,14 +137,15 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 600,
     alignSelf: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.md,
   },
 
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.lg,
+    backgroundColor: CyberArcade.background,
   },
 
   /* BACKGROUND */
@@ -243,7 +156,8 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    opacity: 0.15,
+    backgroundColor: ARCHIVE_ACCENT,
+    opacity: 0.12,
   },
 
   glowBottomLeft: {
@@ -253,37 +167,36 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
     borderRadius: 120,
-    backgroundColor: '#7B2CBF',
+    backgroundColor: CyberArcade.purple,
     opacity: 0.12,
   },
 
   /* HEADER */
   header: {
     width: '100%',
-    marginBottom: 16,
+    marginBottom: Spacing.md,
   },
 
   headerTopRow: {
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
-    gap: 8,
+    gap: Spacing.sm,
   },
 
   archiveBadge: {
     flex: 1,
     minWidth: 0,
-    backgroundColor: 'rgba(224, 128, 157, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
+    backgroundColor: 'rgba(232, 160, 190, 0.12)',
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: Spacing.xs + 1,
+    borderRadius: Radius.sm,
     borderWidth: 1,
-    borderColor: 'rgba(224, 128, 157, 0.3)',
+    borderColor: 'rgba(232, 160, 190, 0.28)',
   },
 
   archiveBadgeText: {
-    color: '#E0809D',
+    color: ARCHIVE_ACCENT,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -291,63 +204,62 @@ const styles = StyleSheet.create({
 
   countBadge: {
     flexShrink: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
+    backgroundColor: CyberArcade.surface,
+    borderWidth: 1,
+    borderColor: CyberArcade.border,
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: Spacing.xs + 1,
+    borderRadius: Radius.pill,
   },
 
   countBadgeText: {
-    color: '#FFB703',
+    color: CyberArcade.gold,
     fontSize: 12,
     fontWeight: '700',
-  },
-
-  title: {
-    width: '100%',
-    fontSize: 26,
-    lineHeight: 32,
-    fontWeight: '900',
-    letterSpacing: -0.5,
   },
 
   /* LIST */
   list: {
     width: '100%',
-    paddingBottom: 24,
+    paddingBottom: Spacing.lg,
   },
 
   cardWrapper: {
     width: '100%',
-    marginBottom: 14,
+    marginBottom: Spacing.sm + 6,
   },
 
   /* EMPTY */
   emptyContainer: {
     width: '100%',
-    paddingHorizontal: 24,
-    paddingVertical: 30,
-    borderWidth: 2,
-    borderRadius: 20,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xl - 2,
+    borderWidth: 1,
+    borderRadius: Radius.xl,
+    backgroundColor: CyberArcade.surface,
+    borderColor: CyberArcade.border,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 24,
+    marginTop: Spacing.lg,
+    ...Elevation.card,
   },
 
   emptyIcon: {
-    fontSize: 48,
-    marginBottom: 12,
+    fontSize: 44,
+    marginBottom: Spacing.sm + 4,
   },
 
   emptyTitle: {
+    color: CyberArcade.textPrimary,
     fontSize: 18,
     fontWeight: '800',
-    marginBottom: 6,
+    marginBottom: Spacing.xs + 2,
     textAlign: 'center',
   },
 
   emptyMessage: {
     width: '100%',
+    color: CyberArcade.secondaryText,
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
@@ -356,20 +268,28 @@ const styles = StyleSheet.create({
   /* ERROR */
   errorText: {
     maxWidth: 340,
+    color: CyberArcade.secondaryText,
     fontSize: 15,
     lineHeight: 21,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: Spacing.md,
   },
 
   retryButton: {
-    paddingVertical: 11,
-    paddingHorizontal: 22,
-    borderWidth: 1.5,
-    borderRadius: 12,
+    paddingVertical: Spacing.sm + 3,
+    paddingHorizontal: Spacing.lg - 2,
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    borderColor: ARCHIVE_ACCENT,
+    backgroundColor: 'rgba(232, 160, 190, 0.10)',
+  },
+
+  retryButtonPressed: {
+    opacity: 0.8,
   },
 
   retryButtonText: {
+    color: ARCHIVE_ACCENT,
     fontSize: 14,
     fontWeight: '700',
   },

@@ -11,13 +11,6 @@ interface ChallengeActionsPanelProps {
   endsAt: Timestamp;
 }
 
-/**
- * `hasEnded` burada kendi hook'undan (useChallengeHasEnded) geliyor —
- * saniyelik tick üreten useCountdown'a bağımlı DEĞİL. Böylece bu panel,
- * hero karttaki geri sayım her saniye güncellenirken gereksiz yere
- * yeniden render olmaz; sadece challenge gerçekten bittiğinde bir kez
- * render olur.
- */
 export const ChallengeActionsPanel = memo(
   ({ challengeId, endsAt }: ChallengeActionsPanelProps) => {
     const hasEnded = useChallengeHasEnded(endsAt);
@@ -39,12 +32,14 @@ export const ChallengeActionsPanel = memo(
     return (
       <View style={styles.actions}>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Pixel art oluştur"
           disabled={hasEnded}
           onPress={handleCreatePress}
           style={({ pressed }) => [
             styles.primaryButton,
             hasEnded && styles.disabledButton,
-            pressed && !hasEnded && styles.buttonPressed,
+            pressed && !hasEnded && styles.primaryButtonPressed,
           ]}
         >
           <View style={styles.primaryButtonIcon}>
@@ -61,10 +56,12 @@ export const ChallengeActionsPanel = memo(
         </Pressable>
 
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Topluluk galerisi"
           onPress={handleGalleryPress}
           style={({ pressed }) => [
             styles.galleryButton,
-            pressed && styles.buttonPressed,
+            pressed && styles.galleryButtonPressed,
           ]}
         >
           <Text style={styles.galleryIcon}>◈</Text>
@@ -82,33 +79,34 @@ ChallengeActionsPanel.displayName = 'ChallengeActionsPanel';
 
 const styles = StyleSheet.create({
   actions: {
-    marginTop: 12,
-    gap: 10,
+    marginTop: 16,
+    gap: 12,
   },
 
+  // --- Birincil CTA: dolu, yüksek kontrast, yumuşak "glow" gölge ---
   primaryButton: {
     minHeight: 72,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    borderRadius: 14,
+    paddingHorizontal: 16,
+    borderRadius: 18,
     backgroundColor: CyberArcade.magenta,
     borderWidth: 1,
-    borderColor: '#FF69A8',
+    borderColor: 'rgba(255, 255, 255, 0.14)',
     shadowColor: CyberArcade.magenta,
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 0,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 5,
   },
 
   primaryButtonIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.14)',
+    backgroundColor: 'rgba(0, 0, 0, 0.16)',
   },
 
   primaryButtonIconText: {
@@ -123,8 +121,8 @@ const styles = StyleSheet.create({
   },
 
   primaryButtonEyebrow: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 8,
+    color: 'rgba(255,255,255,0.72)',
+    fontSize: 9,
     fontWeight: '900',
     letterSpacing: 1.2,
     marginBottom: 2,
@@ -139,44 +137,49 @@ const styles = StyleSheet.create({
 
   primaryArrow: {
     color: CyberArcade.white,
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '900',
   },
 
+  primaryButtonPressed: {
+    transform: [{ scale: 0.98 }],
+    opacity: 0.92,
+  },
+
   galleryButton: {
-    minHeight: 58,
+    minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 15,
-    borderRadius: 13,
-    backgroundColor: CyberArcade.surface,
-    borderWidth: 1,
-    borderColor: CyberArcade.border,
+    paddingHorizontal: 16,
+    borderRadius: 18,
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 245, 212, 0.32)',
   },
 
   galleryIcon: {
     color: CyberArcade.mint,
-    fontSize: 19,
+    fontSize: 18,
     marginRight: 10,
   },
 
   galleryText: {
     flex: 1,
-    color: CyberArcade.white,
-    fontSize: 11,
-    fontWeight: '900',
+    color: CyberArcade.textPrimary,
+    fontSize: 12,
+    fontWeight: '800',
     letterSpacing: 0.5,
   },
 
   galleryArrow: {
     color: CyberArcade.secondaryText,
-    fontSize: 19,
+    fontSize: 18,
     fontWeight: '900',
   },
 
-  buttonPressed: {
-    transform: [{ translateY: 3 }],
-    opacity: 0.88,
+  galleryButtonPressed: {
+    backgroundColor: CyberArcade.mintGlow,
+    opacity: 0.92,
   },
 
   disabledButton: {

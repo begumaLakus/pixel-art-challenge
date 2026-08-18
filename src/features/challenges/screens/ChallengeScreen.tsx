@@ -17,6 +17,10 @@ import { useActiveChallenge } from '../hooks/useActiveChallenge';
  * Orkestratör ekran. Tema haritası, maskot animasyonu, geri sayım ve
  * ~600 satırlık stil bloğu artık ayrı dosyalarda; bu dosya sadece
  * layout + veri akışını birleştirir.
+ *
+ * Görsel dil: koyu, göz yormayan "cyber-arcade" dark mode + 8pt grid
+ * boşluk sistemi. SafeAreaView / Dynamic Island yerleşimi
+ * useSafeAreaInsets üzerinden korunuyor, state/veri akışı değişmedi.
  */
 export const ChallengeScreen = () => {
   const insets = useSafeAreaInsets();
@@ -46,7 +50,7 @@ export const ChallengeScreen = () => {
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: insets.top + 22,
+            paddingTop: insets.top + 24,
             paddingBottom: insets.bottom + 32,
           },
         ]}
@@ -85,24 +89,24 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 480,
     alignSelf: 'center',
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
   },
 
   glowTopRight: {
     position: 'absolute',
-    top: -90,
+    top: -88,
     right: -80,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
+    width: 256,
+    height: 256,
+    borderRadius: 128,
     backgroundColor: CyberArcade.purple,
     opacity: 0.12,
   },
 
   glowBottomLeft: {
     position: 'absolute',
-    bottom: -100,
-    left: -100,
+    bottom: -96,
+    left: -96,
     width: 280,
     height: 280,
     borderRadius: 140,

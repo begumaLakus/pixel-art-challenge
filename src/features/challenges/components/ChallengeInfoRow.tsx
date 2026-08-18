@@ -3,10 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { CyberArcade } from '@/constants/theme';
 
-/**
- * Statik bilgi şeridi (24H / LIVE / 🏆). Props almaz, hiçbir zaman
- * yeniden render olmasına gerek yok — memo salt bir garanti katmanı.
- */
+
 export const ChallengeInfoRow = memo(() => (
   <View style={styles.infoRow}>
     <View style={styles.infoItem}>
@@ -39,11 +36,11 @@ ChallengeInfoRow.displayName = 'ChallengeInfoRow';
 
 const styles = StyleSheet.create({
   infoRow: {
-    marginTop: 22,
+    marginTop: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: CyberArcade.border,
@@ -62,7 +59,7 @@ const styles = StyleSheet.create({
 
   infoValue: {
     color: CyberArcade.gold,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0.5,
   },
@@ -70,7 +67,7 @@ const styles = StyleSheet.create({
   infoLabel: {
     marginTop: 4,
     color: CyberArcade.mutedText,
-    fontSize: 7,
+    fontSize: 8,
     fontWeight: '900',
     letterSpacing: 1,
   },
