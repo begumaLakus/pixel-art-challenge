@@ -1,4 +1,4 @@
-div align="center">
+<div align="center">
 
 <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Video%20Game.png" alt="Pixel Arena" width="80" height="80" />
 
