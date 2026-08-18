@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Video%20Game.png" alt="Pixel Arena" width="80" height="80" />
-
 # 👾 Pixel Art Challenge
 
 **Real-time Themed Pixel Art Arena & Autonomous Voting Platform**
@@ -33,17 +31,17 @@ npx expo start
   <table>
     <tr>
       <td align="center" width="33%">
-        <b>🔐 Kimlik Doğrulama</b><br/><br/>
+        <b>Kimlik Doğrulama</b><br/><br/>
         <img src="./assets/screnshoots/auth-screen.jpeg" alt="Giriş Yap Ekranı" width="100%"/>
         <br/><em>Giriş, kayıt & oturum yönetimi</em>
       </td>
       <td align="center" width="33%">
-        <b>⚡ Canlı Challenge</b><br/><br/>
+        <b>Canlı Challenge</b><br/><br/>
         <img src="./assets/screnshoots/challenge-screen.jpeg" alt="Canlı Meydan Okuma" width="100%"/>
         <br/><em>Günün teması, sayaç & katılım</em>
       </td>
       <td align="center" width="33%">
-        <b>🗳️ Pixel Art Sergisi</b><br/><br/>
+        <b>Pixel Art Sergisi</b><br/><br/>
         <img src="./assets/screnshoots/submissions-screen.jpeg" alt="Topluluk Galerisi" width="100%"/>
         <br/><em>Topluluk eserleri & canlı oylama</em>
       </td>
