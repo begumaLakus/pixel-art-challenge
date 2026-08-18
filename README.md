@@ -18,8 +18,11 @@
 
 ```bash
 # Hızlı Kurulum & Başlatma (Quickstart)
-git clone https://github.com/begumaLakus/pixel-art-challenge.git && cd pixel-art-challenge
-npm install && cp .env.example .env && npx expo start
+git clone https://github.com/begumaLakus/pixel-art-challenge.git
+cd pixel-art-challenge
+npm install
+cp .env.example .env
+npx expo start
 ```
 
 ---
