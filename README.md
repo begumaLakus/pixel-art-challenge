@@ -16,33 +16,36 @@
   Mobil kullanıcıların tematik yarışmalara katılıp piksel sanatı çizdiği, canlı topluluk oylamasıyla şampiyonların belirlendiği retro-modern mobil platform.
 </p>
 
+</div>
+
 ```bash
 # Hızlı Kurulum & Başlatma (Quickstart)
-git clone https://github.com/begumaLakus/pixel-art-challenge.git
+git clone [https://github.com/begumaLakus/pixel-art-challenge.git](https://github.com/begumaLakus/pixel-art-challenge.git)
 cd pixel-art-challenge
 npm install
 cp .env.example .env
 npx expo start
 ```
 
----
-
-</div>
-
 ## 📱 Screenshots & UI
 
 <div align="center">
   <table>
     <tr>
-      <td align="center" width="50%">
-        <b>⚡ Live Challenge Arena</b><br/><br/>
-        <img src="./assets/screenshots/challenge-screen.png" alt="Challenge Screen" width="280"/>
-        <br/><em>Aktif tema, sayaç & katılım aksiyonları</em>
+      <td align="center" width="33%">
+        <b>🔐 Kimlik Doğrulama</b><br/><br/>
+        <img src="./assets/screnshoots/auth-screen.jpeg" alt="Giriş Yap Ekranı" width="100%"/>
+        <br/><em>Giriş, kayıt & oturum yönetimi</em>
       </td>
-      <td align="center" width="50%">
-        <b>🎨 Pixel Studio & Hub</b><br/><br/>
-        <img src="./assets/screenshots/editor-screen.png" alt="Pixel Editor" width="280"/>
-        <br/><em>Çizim alanı, galeri akışı & arşiv</em>
+      <td align="center" width="33%">
+        <b>⚡ Canlı Challenge</b><br/><br/>
+        <img src="./assets/screnshoots/challenge-screen.jpeg" alt="Canlı Meydan Okuma" width="100%"/>
+        <br/><em>Günün teması, sayaç & katılım</em>
+      </td>
+      <td align="center" width="33%">
+        <b>🗳️ Pixel Art Sergisi</b><br/><br/>
+        <img src="./assets/screnshoots/submissions-screen.jpeg" alt="Topluluk Galerisi" width="100%"/>
+        <br/><em>Topluluk eserleri & canlı oylama</em>
       </td>
     </tr>
   </table>
