@@ -1,0 +1,44 @@
+# Bağımlılıklar ve Paket Yöneticisi
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+repomix-output.xml
+repomix-output.txt
+*.log
+
+# Ortam Değişkenleri & Güvenlik
+.env
+.env.*
+!.env.example
+
+# IDE ve Sistem Dosyaları
+.vscode/
+.expo/
+.git/
+.claude/
+.DS_Store
+Thumbs.db
+
+# Build, Dağıtım ve Test Çıktıları
+dist/
+build/
+coverage/
+.firebase/
+functions/node_modules/
+functions/lib/
+
+# Medya Dosyaları (Görselleri metin olarak okumamalıdır)
+assets/
+assets/screnshoots/
+assets/images/
+*.jpeg
+*.jpg
+*.png
+*.gif
+*.svg
+*.ico
+
+# Otomatik Üretilen / Derleyici Tipleri
+expo-env.d.ts

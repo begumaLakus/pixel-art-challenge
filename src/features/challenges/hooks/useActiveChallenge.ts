@@ -1,75 +1,50 @@
 // src/features/challenges/hooks/useActiveChallenge.ts
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { getActiveChallenge } from '../services/challengeService';
+import { subscribeToActiveChallenge } from '../services/challengeService';
 import type { Challenge } from '../types/challenge';
 
 interface UseActiveChallengeResult {
   challenge: Challenge | null;
   loading: boolean;
   error: string | null;
-  refetch: () => Promise<void>;
 }
 
-export const useActiveChallenge =
-  (): UseActiveChallengeResult => {
-    const [challenge, setChallenge] =
-      useState<Challenge | null>(null);
+/**
+ * Aktif challenge'ı canlı olarak izler (Firestore onSnapshot).
+ *
+ * Önceki sürüm 10 saniyede bir `getDocs` ile polling yapıyordu; bu hem
+ * gereksiz Firestore okuması hem de component unmount olduğunda devam eden
+ * bir fetch'in state'i güncellemeye çalışması riskini taşıyordu. onSnapshot
+ * abonelik modeli her iki sorunu da ortadan kaldırır: değişiklik anında
+ * yansır ve cleanup'ta abonelik tamamen kesilir.
+ */
+export const useActiveChallenge = (): UseActiveChallengeResult => {
+  const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-    const [loading, setLoading] =
-      useState<boolean>(true);
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
 
-    const [error, setError] =
-      useState<string | null>(null);
-
-    const fetchChallenge = useCallback(
-      async (): Promise<void> => {
-        try {
-          setError(null);
-
-          const activeChallenge =
-            await getActiveChallenge();
-
-          setChallenge(activeChallenge);
-        } catch (error) {
-          console.error(
-            'Aktif challenge yüklenirken hata:',
-            error,
-          );
-
-          setError(
-            'Aktif challenge yüklenirken bir hata oluştu.',
-          );
-        } finally {
-          setLoading(false);
-        }
+    const unsubscribe = subscribeToActiveChallenge(
+      (activeChallenge) => {
+        setChallenge(activeChallenge);
+        setLoading(false);
       },
-      [],
+      (subscriptionError) => {
+        console.error('Aktif challenge dinlenirken hata:', subscriptionError);
+        setError('Aktif challenge yüklenirken bir hata oluştu.');
+        setLoading(false);
+      },
     );
 
-    useEffect(() => {
-      void fetchChallenge();
-
-      /*
-       * Uygulama açıkken aktif challenge durumunu sürekli kontrol et.
-       *
-       * Bu frontend fallback'tir.
-       * Asıl challenge lifecycle yine Cloud Function tarafından yönetilir.
-       */
-      const interval = setInterval(() => {
-        void fetchChallenge();
-      }, 10000);
-
-      return () => {
-        clearInterval(interval);
-      };
-    }, [fetchChallenge]);
-
-    return {
-      challenge,
-      loading,
-      error,
-      refetch: fetchChallenge,
+    return () => {
+      unsubscribe();
     };
-  };
+  }, []);
+
+  return { challenge, loading, error };
+};
