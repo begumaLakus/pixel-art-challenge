@@ -1,6 +1,3 @@
-/*
-
-
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
@@ -123,6 +120,3 @@ describe('authServices.loginUser / logoutUser', () => {
     assert.equal(signOutFn.mock.calls.length, 1);
   });
 });
-
-
-*/

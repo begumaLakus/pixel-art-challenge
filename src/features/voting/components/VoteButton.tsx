@@ -1,11 +1,22 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
+import { AppAlert } from '@/src/components/ui/AppAlert';
 import { CyberArcade, Radius, Spacing } from '@/constants/theme';
 
 import { useVoting } from '../hooks/useVoting';
 
 interface VoteButtonProps {
   submissionId: string;
+  challengeId: string;
+  /**
+   * Kartın sahibi giriş yapmış kullanıcının kendisiyse `true`. Bu
+   * durumda buton hâlâ dokunulabilir (accessibility açısından tamamen
+   * `disabled` yapmıyoruz), ama oy vermek yerine kullanıcıya kendi
+   * eserine oy veremeyeceğini açıklayan bir Alert/toast gösteriyor.
+   * votingService de aynı durumu reddediyor (savunma katmanı), ama
+   * kullanıcıyı hiç o hataya sürüklememek daha iyi bir deneyim.
+   */
+  isOwnSubmission?: boolean;
 }
 
 /**
@@ -16,8 +27,40 @@ interface VoteButtonProps {
  * Daha kompakt bir "chip" boyutuna çekildi; dokunma alanı hitSlop ile
  * korunuyor.
  */
-export const VoteButton = ({ submissionId }: VoteButtonProps) => {
-  const { hasVoted, loading, voting, error, vote } = useVoting(submissionId);
+export const VoteButton = ({
+  submissionId,
+  challengeId,
+  isOwnSubmission,
+}: VoteButtonProps) => {
+  const { hasVoted, loading, voting, vote } = useVoting(
+    submissionId,
+    challengeId,
+  );
+
+  if (isOwnSubmission) {
+    const handleOwnSubmissionPress = () => {
+      AppAlert.alert('Kendi eserinize oy veremezsiniz.');
+    };
+
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Kendi çiziminize oy veremezsiniz"
+        accessibilityState={{ disabled: true }}
+        hitSlop={6}
+        onPress={handleOwnSubmissionPress}
+        style={({ pressed }) => [
+          styles.button,
+          styles.buttonOwn,
+          pressed && styles.buttonPressed,
+        ]}
+      >
+        <Text style={styles.buttonTextOwn} numberOfLines={1}>
+          Senin Çizimin
+        </Text>
+      </Pressable>
+    );
+  }
 
   if (loading) {
     return (
@@ -28,43 +71,38 @@ export const VoteButton = ({ submissionId }: VoteButtonProps) => {
   }
 
   return (
-    <>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={hasVoted ? 'Oy verildi' : 'Oy ver'}
-        hitSlop={6}
-        onPress={vote}
-        disabled={hasVoted || voting}
-        style={({ pressed }) => [
-          styles.button,
-          hasVoted ? styles.buttonVoted : styles.buttonActive,
-          (hasVoted || voting) && styles.buttonMuted,
-          pressed && !hasVoted && !voting && styles.buttonPressed,
-        ]}
-      >
-        {voting ? (
-          <ActivityIndicator size="small" color={CyberArcade.white} />
-        ) : (
-          <Text
-            style={[
-              styles.buttonText,
-              hasVoted ? styles.buttonTextVoted : styles.buttonTextActive,
-            ]}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.85}
-          >
-            {hasVoted ? '✓ Oy Verildi' : '♡ Oy Ver'}
-          </Text>
-        )}
-      </Pressable>
-
-      {error && (
-        <Text style={styles.error} numberOfLines={2}>
-          {error}
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={hasVoted ? 'Oyu geri al' : 'Oy ver'}
+      hitSlop={6}
+      onPress={vote}
+      disabled={voting}
+      style={({ pressed }) => [
+        styles.button,
+        hasVoted ? styles.buttonVoted : styles.buttonActive,
+        voting && styles.buttonMuted,
+        pressed && !voting && styles.buttonPressed,
+      ]}
+    >
+      {voting ? (
+        <ActivityIndicator
+          size="small"
+          color={hasVoted ? CyberArcade.mutedText : CyberArcade.white}
+        />
+      ) : (
+        <Text
+          style={[
+            styles.buttonText,
+            hasVoted ? styles.buttonTextVoted : styles.buttonTextActive,
+          ]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.85}
+        >
+          {hasVoted ? '✓ Oy Verildi' : '♡ Oy Ver'}
         </Text>
       )}
-    </>
+    </Pressable>
   );
 };
 
@@ -95,6 +133,12 @@ const styles = StyleSheet.create({
     borderColor: CyberArcade.border,
   },
 
+  buttonOwn: {
+    backgroundColor: CyberArcade.surfaceInset,
+    borderColor: CyberArcade.border,
+    opacity: 0.7,
+  },
+
   buttonMuted: {
     opacity: 0.75,
   },
@@ -117,10 +161,9 @@ const styles = StyleSheet.create({
     color: CyberArcade.mutedText,
   },
 
-  error: {
-    color: CyberArcade.danger,
-    fontSize: 11,
-    marginTop: Spacing.xs + 2,
-    textAlign: 'center',
+  buttonTextOwn: {
+    color: CyberArcade.mutedText,
+    fontSize: 10,
+    fontWeight: '700',
   },
 });

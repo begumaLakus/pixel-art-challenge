@@ -3,7 +3,6 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,6 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppAlert } from '@/src/components/ui/AppAlert';
 import {
   CyberArcade,
   Elevation,
@@ -28,7 +28,7 @@ import { registerUser } from '../services/authServices';
 type FieldName = 'email' | 'password' | 'confirmPassword';
 
 /**
- * Premium kayıt ekranı. Kayıt mantığı (registerUser, Alert.alert akışı)
+ * Premium kayıt ekranı. Kayıt mantığı (registerUser, AppAlert.alert akışı)
  * aynı — sadece JSX/stil LoginScreen ile aynı tasarım dilinde (marka
  * rozeti, kart, ikonlu input'lar, KeyboardAvoidingView) yeniden kuruldu.
  */
@@ -45,12 +45,12 @@ export const RegisterScreen = () => {
 
   const handleRegister = async (): Promise<void> => {
     if (!email.trim() || !password || !confirmPassword) {
-      Alert.alert('Hata', 'Tüm alanları doldurun.');
+      AppAlert.alert('Hata', 'Tüm alanları doldurun.');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Hata', 'Şifreler eşleşmiyor.');
+      AppAlert.alert('Hata', 'Şifreler eşleşmiyor.');
       return;
     }
 
@@ -59,9 +59,9 @@ export const RegisterScreen = () => {
 
       await registerUser(email.trim(), password);
 
-      Alert.alert('Başarılı', 'Hesabınız oluşturuldu.');
+      AppAlert.alert('Başarılı', 'Hesabınız oluşturuldu.');
     } catch {
-      Alert.alert(
+      AppAlert.alert(
         'Kayıt başarısız',
         'Hesap oluşturulurken bir hata oluştu.',
       );
@@ -73,7 +73,7 @@ export const RegisterScreen = () => {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.screen}>
         <View pointerEvents="none" style={styles.glowTopRight} />
@@ -178,6 +178,8 @@ export const RegisterScreen = () => {
                     onFocus={() => setFocusedField('password')}
                     onBlur={() => setFocusedField(null)}
                     secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
                   />
 
                   <Pressable
@@ -226,6 +228,8 @@ export const RegisterScreen = () => {
                     onFocus={() => setFocusedField('confirmPassword')}
                     onBlur={() => setFocusedField(null)}
                     secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
                   />
                 </View>
               </View>
@@ -263,7 +267,7 @@ export const RegisterScreen = () => {
               accessibilityLabel="Giriş yap"
               hitSlop={8}
               style={styles.linkRow}
-              onPress={() => router.push('/auth/login')}
+              onPress={() => router.replace('/auth/login')}
             >
               <Text style={styles.linkText}>
                 Zaten hesabın var mı?{' '}

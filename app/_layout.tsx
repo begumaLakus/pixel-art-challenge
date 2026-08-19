@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import {
   ActivityIndicator,
+  BackHandler,
   StyleSheet,
   View,
 } from 'react-native';
@@ -14,6 +15,7 @@ import {
 } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/hooks/useAuth';
+import { AppAlertHost } from '@/src/components/ui/AppAlert';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -44,6 +46,36 @@ function AuthGate({
       router.replace('/(tabs)');
     }
   }, [user, loading, segments, router]);
+
+  // Kullanıcı giriş yaptıktan sonra login/register ekranına donanım
+  // "geri" tuşuyla dönebilmemesi gerekiyor. Yukarıdaki router.replace
+  // çoğu durumda auth stack'ini geçmişten temizliyor, ama Android'de
+  // "geri" tuşu bazen alttaki eski stack girdisine erişebiliyor. Bu
+  // yüzden, kimliği doğrulanmış kullanıcı ana (tabs) ekranındayken
+  // donanım geri tuşunu burada yakalayıp login'e düşmek yerine
+  // uygulamadan çıkıyoruz — Android'de ana ekranda "geri"ye basmanın
+  // standart, beklenen davranışı zaten budur.
+  useEffect(() => {
+    if (loading || !user) {
+      return;
+    }
+
+    const isAtAuthenticatedRoot = segments[0] === '(tabs)';
+
+    if (!isAtAuthenticatedRoot) {
+      return;
+    }
+
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        BackHandler.exitApp();
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [loading, user, segments]);
 
   if (loading) {
     return (
@@ -105,6 +137,8 @@ export default function RootLayout() {
               />
             </Stack>
           </AuthGate>
+
+          <AppAlertHost />
 
           <StatusBar
             style="light"

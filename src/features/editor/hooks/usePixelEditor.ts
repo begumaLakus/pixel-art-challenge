@@ -25,8 +25,57 @@ const DEFAULT_RESOLUTION: PixelResolution = 16;
 const DEFAULT_BRUSH_COLOR = '#3E2723';
 const MAX_HISTORY_DEPTH = 20;
 
-const createEmptyGrid = (resolution: PixelResolution): string[] =>
+export const createEmptyGrid = (resolution: PixelResolution): string[] =>
   Array.from({ length: resolution * resolution }, () => BACKGROUND_COLOR);
+
+/**
+ * Verilen indekslere rengi uygulayan saf (pure) fonksiyon. Değişiklik
+ * yoksa orijinal diziyle aynı referansı döndürür (immutability +
+ * gereksiz re-render'ları önlemek için); değişiklik varsa yeni bir
+ * dizi döner, kaynak dizi mutate edilmez. Aralık dışı indeksler
+ * sessizce yok sayılır.
+ */
+export const applyPaint = (
+  pixels: string[],
+  indices: number[],
+  color: string,
+): { next: string[]; changed: boolean } => {
+  let next = pixels;
+
+  for (const index of indices) {
+    if (index < 0 || index >= pixels.length) {
+      continue;
+    }
+
+    if (pixels[index] !== color) {
+      if (next === pixels) {
+        next = pixels.slice();
+      }
+      next[index] = color;
+    }
+  }
+
+  return { next, changed: next !== pixels };
+};
+
+/**
+ * Undo geçmişine yeni bir snapshot ekleyen saf (pure) fonksiyon.
+ * `maxDepth`'i aşan en eski snapshot(lar) FIFO sırayla düşürülür.
+ * Kaynak `history` dizisi mutate edilmez.
+ */
+export const appendHistorySnapshot = (
+  history: string[][],
+  snapshot: string[],
+  maxDepth: number,
+): string[][] => {
+  const next = [...history, snapshot];
+
+  if (next.length > maxDepth) {
+    return next.slice(next.length - maxDepth);
+  }
+
+  return next;
+};
 
 export const usePixelEditor = (): UsePixelEditorResult => {
   const [resolution, setResolutionState] =
@@ -57,18 +106,17 @@ export const usePixelEditor = (): UsePixelEditorResult => {
   }, [pixels]);
 
   const pushHistory = useCallback((snapshot: string[]): void => {
-    historyRef.current.push(snapshot);
-
-    if (historyRef.current.length > MAX_HISTORY_DEPTH) {
-      historyRef.current.shift();
-    }
+    historyRef.current = appendHistorySnapshot(
+      historyRef.current,
+      snapshot,
+      MAX_HISTORY_DEPTH,
+    );
 
     setCanUndo(true);
   }, []);
 
   const selectColor = useCallback((color: string): void => {
     setSelectedColorState(color);
-   
 
     setTool('paint');
   }, []);
@@ -100,22 +148,9 @@ export const usePixelEditor = (): UsePixelEditorResult => {
       const color = tool === 'erase' ? BACKGROUND_COLOR : selectedColor;
 
       setPixels((current) => {
-        let next = current;
+        const { next, changed } = applyPaint(current, indices, color);
 
-        for (const index of indices) {
-          if (index < 0 || index >= current.length) {
-            continue;
-          }
-
-          if (current[index] !== color) {
-            if (next === current) {
-              next = current.slice();
-            }
-            next[index] = color;
-          }
-        }
-
-        if (next !== current) {
+        if (changed) {
           strokeDirtyRef.current = true;
         }
 

@@ -18,7 +18,7 @@ interface SubmissionsScreenProps {
 export const SubmissionsScreen = ({
   challengeId,
 }: SubmissionsScreenProps) => {
-  const { submissions, loading, error } = useSubmissions(challengeId);
+  const { submissions, loading, error, refresh } = useSubmissions(challengeId);
 
   if (loading) {
     return (
@@ -97,7 +97,7 @@ export const SubmissionsScreen = ({
             columnWrapperStyle={styles.columnWrapper}
             renderItem={({ item }) => (
               <View style={styles.cardWrapper}>
-                <SubmissionCard submission={item} />
+                <SubmissionCard submission={item} onDeleted={refresh} />
               </View>
             )}
             contentContainerStyle={styles.list}
@@ -170,22 +170,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    marginBottom: Spacing.sm + 2,
+    marginBottom: Spacing.sm + 4,
+    paddingVertical: Spacing.xs + 3,
+    paddingHorizontal: Spacing.sm + 3,
+    borderRadius: Radius.pill,
+    backgroundColor: CyberArcade.surface,
+    borderWidth: 1,
+    borderColor: CyberArcade.border,
+    shadowColor: CyberArcade.shadowColor,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 2,
   },
 
   backButtonPressed: {
-    opacity: 0.7,
+    opacity: 0.75,
+    backgroundColor: CyberArcade.surfacePressed,
   },
 
   backButtonText: {
-    fontSize: 20,
-    lineHeight: 24,
-    fontWeight: '800',
-    color: CyberArcade.secondaryText,
+    fontSize: 16,
+    lineHeight: 18,
+    fontWeight: '900',
+    color: CyberArcade.magenta,
   },
 
   backButtonLabel: {
-    marginLeft: Spacing.xs + 2,
+    marginLeft: Spacing.xs + 3,
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 1.2,

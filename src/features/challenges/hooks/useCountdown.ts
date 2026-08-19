@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import type { Timestamp } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 
 interface UseCountdownResult {
   timeLeft: number;

@@ -1,7 +1,3 @@
-/*
-
-
-
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
@@ -125,6 +121,3 @@ describe('challengeService.subscribeToActiveChallenge', () => {
     assert.equal(onErrorCalls.length, 1);
   });
 });
-
-
-*/

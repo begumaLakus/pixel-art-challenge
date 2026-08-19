@@ -1,12 +1,22 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AppAlert } from '@/src/components/ui/AppAlert';
 import { CyberArcade, Elevation, Radius, Spacing } from '@/constants/theme';
 
+import { auth } from '../../auth/services/authServices';
 import { VoteButton } from '../../voting/components/VoteButton';
+import { useLiveVoteCount } from '../../voting/hooks/useVoting';
+import { deleteSubmission } from '../services/submissionService';
 import type { Submission } from '../types/types';
 
 interface SubmissionCardProps {
   submission: Submission;
+  /**
+   * Bu kart, kullanıcının kendi gönderisi silindiğinde çağrılır —
+   * galeriyi (SubmissionsScreen) yeniden yükleyerek listeden kaldırır.
+   */
+  onDeleted?: () => void;
 }
 
 /**
@@ -26,8 +36,46 @@ interface SubmissionCardProps {
  * doğru ve beklenen davranış), kart genişlikleri de böylece tutarlı
  * kalıp altındaki oy butonu satırını hizalı tutuyor.
  */
-export const SubmissionCard = ({ submission }: SubmissionCardProps) => {
+export const SubmissionCard = ({ submission, onDeleted }: SubmissionCardProps) => {
   const { pixels, resolution } = submission;
+  const [deleting, setDeleting] = useState(false);
+
+  const isOwnSubmission = auth.currentUser?.uid === submission.userId;
+
+  // Kart, listeleme sorgusundan gelen `submission.voteCount`'u değil,
+  // Firestore'u canlı dinleyen bu sayıyı gösterir — böylece bu karta ya
+  // da (oy transferi yüzünden) başka bir karta oy verildiğinde/oy geri
+  // alındığında sayı ekrandan çıkıp geri girmeden anında güncellenir.
+  const liveVoteCount = useLiveVoteCount(submission.id, submission.voteCount ?? 0);
+
+  const handleDeletePress = useCallback(() => {
+    AppAlert.alert(
+      'Çizimi Sil',
+      'Gönderdiğin pixel art silinecek ve bu meydan okumaya yeniden katılabileceksin. Emin misin?',
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'Sil',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setDeleting(true);
+
+              await deleteSubmission(submission.id);
+
+              onDeleted?.();
+            } catch (err) {
+              console.error('Gönderi silinemedi:', err);
+
+              setDeleting(false);
+
+              AppAlert.alert('Hata', 'Çizim silinirken bir hata oluştu.');
+            }
+          },
+        },
+      ],
+    );
+  }, [submission.id, onDeleted]);
 
   return (
     <View style={styles.card}>
@@ -53,13 +101,43 @@ export const SubmissionCard = ({ submission }: SubmissionCardProps) => {
         </View>
       </View>
 
+      {isOwnSubmission && (
+        <View style={styles.ownerBadge}>
+          <Text style={styles.ownerBadgeText}>SENİN ÇİZİMİN</Text>
+        </View>
+      )}
+
       <View style={styles.info}>
         <Text style={styles.voteCount} numberOfLines={1}>
-          {submission.voteCount ?? 0} oy
+          {liveVoteCount} oy
         </Text>
 
-        <VoteButton submissionId={submission.id} />
+        <VoteButton
+          submissionId={submission.id}
+          challengeId={submission.challengeId}
+          isOwnSubmission={isOwnSubmission}
+        />
       </View>
+
+      {isOwnSubmission && (
+      <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Çizimi sil"
+          onPress={handleDeletePress}
+          disabled={deleting}
+          style={({ pressed }) => [
+            styles.deleteButton,
+            pressed && !deleting && styles.deleteButtonPressed,
+            deleting && styles.deleteButtonDisabled,
+          ]}
+        >
+          {deleting ? (
+            <ActivityIndicator size="small" color={CyberArcade.danger} />
+          ) : (
+            <Text style={styles.deleteButtonText}>🗑 Sil</Text>
+          )}
+        </Pressable>
+      )}
     </View>
   );
 };
@@ -114,5 +192,46 @@ const styles = StyleSheet.create({
     color: CyberArcade.textPrimary,
     fontSize: 13,
     fontWeight: '700',
+  },
+
+  ownerBadge: {
+    alignSelf: 'flex-start',
+    marginTop: Spacing.xs + 2,
+    paddingHorizontal: Spacing.xs + 2,
+    paddingVertical: 3,
+    borderRadius: Radius.pill,
+    backgroundColor: CyberArcade.mintGlow,
+  },
+
+  ownerBadgeText: {
+    color: CyberArcade.mint,
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+
+  deleteButton: {
+    marginTop: Spacing.xs + 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.xs + 2,
+    borderRadius: Radius.sm + 1,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 59, 107, 0.4)',
+    backgroundColor: 'rgba(255, 59, 107, 0.08)',
+  },
+
+  deleteButtonPressed: {
+    opacity: 0.7,
+  },
+
+  deleteButtonDisabled: {
+    opacity: 0.5,
+  },
+
+  deleteButtonText: {
+    color: CyberArcade.danger,
+    fontSize: 11,
+    fontWeight: '800',
   },
 });

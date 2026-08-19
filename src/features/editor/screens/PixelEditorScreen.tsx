@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Alert,
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,9 +10,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppAlert } from '@/src/components/ui/AppAlert';
 import { CyberArcade, Elevation, Radius, Spacing, Typography } from '@/constants/theme';
 
-import { createSubmission } from '../../submission/services/submissionService';
+import {
+  createSubmission,
+  getMySubmissionForChallenge,
+} from '../../submission/services/submissionService';
 import { PixelGrid } from '../components/PixelGrid';
 import {
   type PixelResolution,
@@ -98,6 +102,58 @@ export const PixelEditorScreen = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Kullanıcı bu challenge'a daha önce bir çizim gönderdiyse (ör. Arena
+  // ekranındaki kartı görmeden, doğrudan bir linkten veya navigation
+  // geçmişinden bu ekrana geri gelirse) editor'ü açmasına izin vermiyoruz
+  // — createSubmission zaten sunucu tarafında mükerrer kaydı engelliyor,
+  // ama bu kontrol kullanıcının hiç boş yere çizmeye başlamasını önlüyor.
+  const [accessChecked, setAccessChecked] = useState(false);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    (async () => {
+      try {
+        const existingSubmission =
+          await getMySubmissionForChallenge(challengeId);
+
+        if (isCancelled) {
+          return;
+        }
+
+        if (existingSubmission) {
+          AppAlert.alert(
+            'Zaten Katıldın',
+            'Bu meydan okuma için zaten bir çizim gönderdin. Yeniden katılmak istersen önce gönderdiğin çizimi silebilirsin.',
+            [
+              {
+                text: 'Tamam',
+                onPress: () => router.back(),
+              },
+            ],
+            { cancelable: false },
+          );
+          return;
+        }
+
+        setAccessChecked(true);
+      } catch (err) {
+        console.error('Katılım durumu kontrol edilemedi:', err);
+
+        // Kontrol başarısız olsa bile kullanıcıyı editor'de kilitli
+        // bırakmıyoruz — mükerrer gönderi koruması zaten createSubmission
+        // içinde de var.
+        if (!isCancelled) {
+          setAccessChecked(true);
+        }
+      }
+    })();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [challengeId]);
+
   const {
     pixels,
     selectedColor,
@@ -127,7 +183,7 @@ export const PixelEditorScreen = ({
       return;
     }
 
-    Alert.alert(
+    AppAlert.alert(
       'Çözünürlüğü Değiştir',
       'Çözünürlüğü değiştirmek mevcut çizimini silecek. Devam edilsin mi?',
       [
@@ -166,7 +222,7 @@ export const PixelEditorScreen = ({
       return;
     }
 
-    Alert.alert(
+    AppAlert.alert(
       'Tümünü Temizle',
       'Çizim tahtasındaki her şey silinecek. Emin misin?',
       [
@@ -197,7 +253,7 @@ export const PixelEditorScreen = ({
         resolution,
       });
 
-      Alert.alert(
+      AppAlert.alert(
         'Başarılı',
         'Pixel art çalışman başarıyla gönderildi.',
         [
@@ -220,11 +276,19 @@ export const PixelEditorScreen = ({
           ? error.message
           : 'Pixel art gönderilirken bir hata oluştu.';
 
-      Alert.alert('Hata', message);
+      AppAlert.alert('Hata', message);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (!accessChecked) {
+    return (
+      <View style={[styles.container, styles.accessCheckContainer]}>
+        <ActivityIndicator size="large" color={CyberArcade.magenta} />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
@@ -429,6 +493,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: CyberArcade.background,
+  },
+
+  accessCheckContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   /* HEADER */

@@ -1,10 +1,12 @@
 import { router } from 'expo-router';
 import type { Timestamp } from 'firebase/firestore';
 import React, { memo, useCallback } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AppAlert } from '@/src/components/ui/AppAlert';
 import { CyberArcade, Elevation, Radius, Spacing } from '@/constants/theme';
 import { useMySubmission } from '@/src/features/submission/hooks/useSubmission';
+import { useLiveVoteCount } from '@/src/features/voting/hooks/useVoting';
 
 import { useChallengeHasEnded } from '../hooks/useChallengeHasEnded';
 
@@ -50,6 +52,25 @@ const MySubmissionPreview = memo(
 
 MySubmissionPreview.displayName = 'MySubmissionPreview';
 
+/**
+ * "X oy aldı" metnini canlı gösterir — başkaları bu çizime oy verdikçe
+ * (ya da oylarını geri aldıkça/başka bir çizime taşıdıkça) kullanıcı bu
+ * ekrandan hiç çıkmadan sayı güncellenir.
+ */
+const MySubmissionVoteSubtitle = ({
+  submissionId,
+  initialVoteCount,
+}: {
+  submissionId: string;
+  initialVoteCount: number;
+}) => {
+  const liveVoteCount = useLiveVoteCount(submissionId, initialVoteCount);
+
+  return (
+    <Text style={styles.submittedSubtitle}>{liveVoteCount} oy aldı</Text>
+  );
+};
+
 export const ChallengeActionsPanel = memo(
   ({ challengeId, endsAt }: ChallengeActionsPanelProps) => {
     const hasEnded = useChallengeHasEnded(endsAt);
@@ -75,7 +96,7 @@ export const ChallengeActionsPanel = memo(
     }, [challengeId]);
 
     const handleDeletePress = useCallback(() => {
-      Alert.alert(
+      AppAlert.alert(
         'Çizimi Sil',
         'Gönderdiğin pixel art silinecek ve bu meydan okumaya yeniden katılabileceksin. Emin misin?',
         [
@@ -112,9 +133,10 @@ export const ChallengeActionsPanel = memo(
 
               <Text style={styles.submittedTitle}>Senin Çizimin</Text>
 
-              <Text style={styles.submittedSubtitle}>
-                {mySubmission.voteCount ?? 0} oy aldı
-              </Text>
+              <MySubmissionVoteSubtitle
+                submissionId={mySubmission.id}
+                initialVoteCount={mySubmission.voteCount ?? 0}
+              />
 
               {!hasEnded && (
                 <Pressable

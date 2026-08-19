@@ -66,7 +66,7 @@ export const LoginScreen = () => {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.screen}>
         <View pointerEvents="none" style={styles.glowTopRight} />
@@ -177,6 +177,8 @@ export const LoginScreen = () => {
                     onFocus={() => setFocusedField('password')}
                     onBlur={() => setFocusedField(null)}
                     secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
                   />
 
                   <Pressable
@@ -240,7 +242,7 @@ export const LoginScreen = () => {
               accessibilityLabel="Kayıt ol"
               hitSlop={8}
               style={styles.linkRow}
-              onPress={() => router.push('/auth/register')}
+              onPress={() => router.replace('/auth/register')}
             >
               <Text style={styles.linkText}>
                 Hesabın yok mu?{' '}
