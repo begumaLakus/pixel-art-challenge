@@ -1,6 +1,8 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
+  doc,
   getDocs,
   query,
   serverTimestamp,
@@ -79,4 +81,52 @@ export const getSubmissionsByChallenge = async (
 
       return bTime - aTime;
     });
+};
+
+/**
+ * Giriş yapmış kullanıcının belirli bir challenge için gönderdiği çizimi
+ * (varsa) getirir. `createSubmission` içindeki mükerrer katılım
+ * kontrolüyle aynı sorguyu kullanır; ChallengeActionsPanel bu fonksiyonla
+ * kullanıcının zaten katılıp katılmadığını (ve katıldıysa hangi çizimle)
+ * belirler.
+ */
+export const getMySubmissionForChallenge = async (
+  challengeId: string,
+): Promise<Submission | null> => {
+  const user = auth.currentUser;
+
+  if (!user) {
+    return null;
+  }
+
+  const mySubmissionQuery = query(
+    collection(db, 'submissions'),
+    where('userId', '==', user.uid),
+    where('challengeId', '==', challengeId),
+    limit(1),
+  );
+
+  const snapshot = await getDocs(mySubmissionQuery);
+
+  if (snapshot.empty) {
+    return null;
+  }
+
+  const document = snapshot.docs[0];
+
+  return {
+    id: document.id,
+    ...document.data(),
+  } as Submission;
+};
+
+/**
+ * Kullanıcının kendi gönderisini siler. Silindikten sonra
+ * `createSubmission`'daki mükerrer katılım kontrolü artık bu challenge
+ * için bir kayıt bulamayacağından kullanıcı yeniden katılabilir.
+ */
+export const deleteSubmission = async (
+  submissionId: string,
+): Promise<void> => {
+  await deleteDoc(doc(db, 'submissions', submissionId));
 };

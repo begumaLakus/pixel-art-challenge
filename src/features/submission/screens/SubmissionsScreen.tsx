@@ -1,5 +1,6 @@
+import { router } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CyberArcade, Elevation, Radius, Spacing } from '@/constants/theme';
@@ -43,6 +44,20 @@ export const SubmissionsScreen = ({
       <View style={styles.container}>
         {/* HEADER */}
         <View style={styles.header}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Geri dön"
+            onPress={() => router.back()}
+            hitSlop={10}
+            style={({ pressed }) => [
+              styles.backButton,
+              pressed && styles.backButtonPressed,
+            ]}
+          >
+            <Text style={styles.backButtonText}>←</Text>
+            <Text style={styles.backButtonLabel}>GERİ</Text>
+          </Pressable>
+
           <View style={styles.headerTopRow}>
             <View style={styles.galleryBadge}>
               <Text style={styles.galleryBadgeText} numberOfLines={1}>
@@ -149,6 +164,32 @@ const styles = StyleSheet.create({
   header: {
     width: '100%',
     marginBottom: Spacing.md,
+  },
+
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginBottom: Spacing.sm + 2,
+  },
+
+  backButtonPressed: {
+    opacity: 0.7,
+  },
+
+  backButtonText: {
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '800',
+    color: CyberArcade.secondaryText,
+  },
+
+  backButtonLabel: {
+    marginLeft: Spacing.xs + 2,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+    color: CyberArcade.secondaryText,
   },
 
   headerTopRow: {

@@ -1,9 +1,11 @@
 import { router } from 'expo-router';
 import type { Timestamp } from 'firebase/firestore';
 import React, { memo, useCallback } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { CyberArcade } from '@/constants/theme';
+import { CyberArcade, Elevation, Radius, Spacing } from '@/constants/theme';
+import { useMySubmission } from '@/src/features/submission/hooks/useSubmission';
+
 import { useChallengeHasEnded } from '../hooks/useChallengeHasEnded';
 
 interface ChallengeActionsPanelProps {
@@ -11,9 +13,52 @@ interface ChallengeActionsPanelProps {
   endsAt: Timestamp;
 }
 
+const PREVIEW_RESOLUTION_CAP = 32;
+
+/**
+ * Kullanıcının kendi gönderisinin küçük, salt okunur önizlemesi.
+ * PixelGrid dokunma/gesture altyapısına ihtiyaç duymadığı için burada
+ * SubmissionCard'daki basit View ızgarası yaklaşımı tekrar kullanılıyor.
+ */
+const MySubmissionPreview = memo(
+  ({ pixels, resolution }: { pixels: string[]; resolution: number }) => {
+    const safeResolution = Math.min(resolution, PREVIEW_RESOLUTION_CAP);
+
+    return (
+      <View style={styles.previewFrame}>
+        {Array.from({ length: safeResolution }).map((_, rowIndex) => (
+          <View key={`row-${rowIndex}`} style={styles.previewRow}>
+            {Array.from({ length: safeResolution }).map((_, columnIndex) => {
+              const pixelIndex = rowIndex * resolution + columnIndex;
+
+              return (
+                <View
+                  key={`pixel-${rowIndex}-${columnIndex}`}
+                  style={[
+                    styles.previewPixel,
+                    { backgroundColor: pixels[pixelIndex] ?? '#FFFFFF' },
+                  ]}
+                />
+              );
+            })}
+          </View>
+        ))}
+      </View>
+    );
+  },
+);
+
+MySubmissionPreview.displayName = 'MySubmissionPreview';
+
 export const ChallengeActionsPanel = memo(
   ({ challengeId, endsAt }: ChallengeActionsPanelProps) => {
     const hasEnded = useChallengeHasEnded(endsAt);
+    const {
+      mySubmission,
+      loading: mySubmissionLoading,
+      deleting,
+      removeMySubmission,
+    } = useMySubmission(challengeId);
 
     const handleCreatePress = useCallback(() => {
       router.push({
@@ -29,17 +74,102 @@ export const ChallengeActionsPanel = memo(
       });
     }, [challengeId]);
 
+    const handleDeletePress = useCallback(() => {
+      Alert.alert(
+        'Çizimi Sil',
+        'Gönderdiğin pixel art silinecek ve bu meydan okumaya yeniden katılabileceksin. Emin misin?',
+        [
+          { text: 'Vazgeç', style: 'cancel' },
+          {
+            text: 'Sil',
+            style: 'destructive',
+            onPress: () => {
+              removeMySubmission();
+            },
+          },
+        ],
+      );
+    }, [removeMySubmission]);
+
+    // Kullanıcı bu challenge'a zaten katıldıysa "PIXEL ART OLUŞTUR"
+    // butonu yerine kendi çizimini + silme aksiyonunu gösteriyoruz.
+    // Böylece aynı challenge'a ikinci kez editor ekranından girip
+    // (zaten createSubmission tarafında da engellenen) mükerrer bir
+    // gönderi denemesi UI seviyesinde de mümkün olmuyor.
+    if (mySubmission) {
+      return (
+        <View style={styles.actions}>
+          <View style={styles.submittedCard}>
+            <MySubmissionPreview
+              pixels={mySubmission.pixels}
+              resolution={mySubmission.resolution}
+            />
+
+            <View style={styles.submittedInfo}>
+              <View style={styles.submittedBadge}>
+                <Text style={styles.submittedBadgeText}>✓ GÖNDERİLDİ</Text>
+              </View>
+
+              <Text style={styles.submittedTitle}>Senin Çizimin</Text>
+
+              <Text style={styles.submittedSubtitle}>
+                {mySubmission.voteCount ?? 0} oy aldı
+              </Text>
+
+              {!hasEnded && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Çizimi sil"
+                  onPress={handleDeletePress}
+                  disabled={deleting}
+                  style={({ pressed }) => [
+                    styles.deleteButton,
+                    pressed && !deleting && styles.deleteButtonPressed,
+                    deleting && styles.disabledButton,
+                  ]}
+                >
+                  {deleting ? (
+                    <ActivityIndicator size="small" color={CyberArcade.danger} />
+                  ) : (
+                    <Text style={styles.deleteButtonText}>🗑 Çizimi Sil</Text>
+                  )}
+                </Pressable>
+              )}
+            </View>
+          </View>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Topluluk galerisi"
+            onPress={handleGalleryPress}
+            style={({ pressed }) => [
+              styles.galleryButton,
+              pressed && styles.galleryButtonPressed,
+            ]}
+          >
+            <Text style={styles.galleryIcon}>◈</Text>
+
+            <Text style={styles.galleryText}>TOPLULUK GALERİSİ</Text>
+
+            <Text style={styles.galleryArrow}>→</Text>
+          </Pressable>
+        </View>
+      );
+    }
+
+    const isCreateDisabled = hasEnded || mySubmissionLoading;
+
     return (
       <View style={styles.actions}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Pixel art oluştur"
-          disabled={hasEnded}
+          disabled={isCreateDisabled}
           onPress={handleCreatePress}
           style={({ pressed }) => [
             styles.primaryButton,
-            hasEnded && styles.disabledButton,
-            pressed && !hasEnded && styles.primaryButtonPressed,
+            isCreateDisabled && styles.disabledButton,
+            pressed && !isCreateDisabled && styles.primaryButtonPressed,
           ]}
         >
           <View style={styles.primaryButtonIcon}>
@@ -184,5 +314,93 @@ const styles = StyleSheet.create({
 
   disabledButton: {
     opacity: 0.35,
+  },
+
+  /* SENİN ÇİZİMİN KARTI */
+  submittedCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.sm + 4,
+    borderRadius: Radius.lg,
+    backgroundColor: CyberArcade.surface,
+    borderWidth: 1,
+    borderColor: CyberArcade.border,
+    ...Elevation.card,
+  },
+
+  previewFrame: {
+    width: 84,
+    height: 84,
+    borderRadius: Radius.sm,
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: CyberArcade.border,
+  },
+
+  previewRow: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+
+  previewPixel: {
+    flex: 1,
+  },
+
+  submittedInfo: {
+    flex: 1,
+    marginLeft: Spacing.sm + 4,
+  },
+
+  submittedBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: Spacing.xs + 2,
+    paddingVertical: 3,
+    borderRadius: Radius.pill,
+    backgroundColor: CyberArcade.mintGlow,
+    marginBottom: Spacing.xs + 2,
+  },
+
+  submittedBadgeText: {
+    color: CyberArcade.mint,
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+
+  submittedTitle: {
+    color: CyberArcade.textPrimary,
+    fontSize: 14,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+
+  submittedSubtitle: {
+    color: CyberArcade.secondaryText,
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: Spacing.xs + 4,
+  },
+
+  deleteButton: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: Spacing.xs + 2,
+    borderRadius: Radius.sm + 1,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 59, 107, 0.4)',
+    backgroundColor: 'rgba(255, 59, 107, 0.08)',
+    minWidth: 96,
+    alignItems: 'center',
+  },
+
+  deleteButtonPressed: {
+    opacity: 0.7,
+  },
+
+  deleteButtonText: {
+    color: CyberArcade.danger,
+    fontSize: 11,
+    fontWeight: '800',
   },
 });

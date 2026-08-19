@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
@@ -72,6 +73,20 @@ export const ArchiveScreen = () => {
       >
         {/* HEADER */}
         <View style={styles.header}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Geri dön"
+            onPress={() => router.back()}
+            hitSlop={10}
+            style={({ pressed }) => [
+              styles.backButton,
+              pressed && styles.backButtonPressed,
+            ]}
+          >
+            <Text style={styles.backButtonText}>←</Text>
+            <Text style={styles.backButtonLabel}>GERİ</Text>
+          </Pressable>
+
           <View style={styles.headerTopRow}>
             <View style={styles.archiveBadge}>
               <Text
@@ -175,6 +190,32 @@ const styles = StyleSheet.create({
   header: {
     width: '100%',
     marginBottom: Spacing.md,
+  },
+
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginBottom: Spacing.sm + 2,
+  },
+
+  backButtonPressed: {
+    opacity: 0.7,
+  },
+
+  backButtonText: {
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '800',
+    color: CyberArcade.secondaryText,
+  },
+
+  backButtonLabel: {
+    marginLeft: Spacing.xs + 2,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+    color: CyberArcade.secondaryText,
   },
 
   headerTopRow: {

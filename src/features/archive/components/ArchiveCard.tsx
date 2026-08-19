@@ -124,7 +124,9 @@ export const ArchiveCard = ({ archivedChallenge }: ArchiveCardProps) => {
             <PixelGrid
               pixels={winnerSubmission.pixels}
               resolution={winnerSubmission.resolution}
-              onPixelPress={() => {}}
+              onStrokeStart={() => {}}
+              onStrokeEnd={() => {}}
+              onPaintPixels={() => {}}
             />
           </View>
         </>

@@ -3,7 +3,9 @@
   "scripts": {
     "build": "tsc",
     "serve": "npm run build && firebase emulators:start --only functions",
-    "deploy": "firebase deploy --only functions"
+    "deploy": "firebase deploy --only functions",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --experimental-test-module-mocks --test \"src/**/*.test.ts\""
   },
   "engines": {
     "node": "20"
