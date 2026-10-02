@@ -1,31 +1,48 @@
-import { DarkTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack, useRouter, useSegments } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
 import {
-  ActivityIndicator,
-  BackHandler,
-  StyleSheet,
-  View,
-} from 'react-native';
+  SpaceGrotesk_500Medium,
+  SpaceGrotesk_700Bold,
+} from '@expo-google-fonts/space-grotesk';
+import {
+  Silkscreen_400Regular,
+  Silkscreen_700Bold,
+} from '@expo-google-fonts/silkscreen';
+import { DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
+import { useFonts } from 'expo-font';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import React, { useEffect } from 'react';
+import { BackHandler, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
-import {
-  SafeAreaProvider,
-} from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { useAuth } from '@/src/features/auth/hooks/useAuth';
 import { AppAlertHost } from '@/src/components/ui/AppAlert';
+import { PixelSprite } from '@/src/components/ui/PixelSprite';
+import { useAuth } from '@/src/features/auth/hooks/useAuth';
+import { configureNotificationHandler } from '@/src/features/notifications/notificationService';
+import { colors } from '@/src/theme';
+
+void SplashScreen.preventAutoHideAsync();
+configureNotificationHandler();
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-function AuthGate({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const NAVIGATION_THEME = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: colors.paper,
+    card: colors.paper,
+    text: colors.ink,
+    border: colors.ink,
+    primary: colors.pink,
+  },
+};
+
+function AuthGate({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
@@ -47,22 +64,10 @@ function AuthGate({
     }
   }, [user, loading, segments, router]);
 
-  // Kullanıcı giriş yaptıktan sonra login/register ekranına donanım
-  // "geri" tuşuyla dönebilmemesi gerekiyor. Yukarıdaki router.replace
-  // çoğu durumda auth stack'ini geçmişten temizliyor, ama Android'de
-  // "geri" tuşu bazen alttaki eski stack girdisine erişebiliyor. Bu
-  // yüzden, kimliği doğrulanmış kullanıcı ana (tabs) ekranındayken
-  // donanım geri tuşunu burada yakalayıp login'e düşmek yerine
-  // uygulamadan çıkıyoruz — Android'de ana ekranda "geri"ye basmanın
-  // standart, beklenen davranışı zaten budur.
+  // Giriş yapmış kullanıcı ana ekrandayken Android donanım "geri" tuşu
+  // alttaki eski auth stack girdisine düşmek yerine uygulamadan çıkar.
   useEffect(() => {
-    if (loading || !user) {
-      return;
-    }
-
-    const isAtAuthenticatedRoot = segments[0] === '(tabs)';
-
-    if (!isAtAuthenticatedRoot) {
+    if (loading || !user || segments[0] !== '(tabs)') {
       return;
     }
 
@@ -79,19 +84,8 @@ function AuthGate({
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <View style={styles.loadingLogo}>
-          <View style={styles.loadingPixel} />
-          <View style={styles.loadingPixel} />
-          <View style={styles.loadingPixel} />
-          <View style={styles.loadingPixel} />
-        </View>
-
-        <ActivityIndicator
-          size="small"
-          color="#FF2A85"
-          style={styles.loadingIndicator}
-        />
+      <View style={styles.loading}>
+        <PixelSprite name="pixo" cell={9} />
       </View>
     );
   }
@@ -100,51 +94,45 @@ function AuthGate({
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    SpaceGrotesk_500Medium,
+    SpaceGrotesk_700Bold,
+    Silkscreen_400Regular,
+    Silkscreen_700Bold,
+  });
+
+  const ready = fontsLoaded || fontError !== null;
+
+  useEffect(() => {
+    if (ready) {
+      void SplashScreen.hideAsync();
+    }
+  }, [ready]);
+
+  // Yazı tipleri yüklenene kadar splash ekranı görünür kalır.
+  if (!ready) {
+    return null;
+  }
+
   return (
- 
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
-        <ThemeProvider value={DarkTheme}>
+        <ThemeProvider value={NAVIGATION_THEME}>
           <AuthGate>
             <Stack
               screenOptions={{
-                contentStyle: {
-                  backgroundColor: '#0A0714',
-                },
+                contentStyle: { backgroundColor: colors.paper },
                 headerShown: false,
               }}
             >
-              <Stack.Screen
-                name="(tabs)"
-                options={{
-                  headerShown: false,
-                }}
-              />
-
-              <Stack.Screen
-                name="auth"
-                options={{
-                  headerShown: false,
-                }}
-              />
-
-              <Stack.Screen
-                name="modal"
-                options={{
-                  presentation: 'modal',
-                  headerShown: false,
-                }}
-              />
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="auth" />
             </Stack>
           </AuthGate>
 
           <AppAlertHost />
 
-          <StatusBar
-            style="light"
-            translucent
-            backgroundColor="transparent"
-          />
+          <StatusBar style="dark" />
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
@@ -152,34 +140,11 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  root: {
+  root: { flex: 1, backgroundColor: colors.paper },
+  loading: {
     flex: 1,
-  },
-
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: '#0A0714',
+    backgroundColor: colors.paper,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-
-  loadingLogo: {
-    width: 52,
-    height: 52,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-    padding: 4,
-    marginBottom: 20,
-  },
-
-  loadingPixel: {
-    width: 20,
-    height: 20,
-    backgroundColor: '#FF2A85',
-  },
-
-  loadingIndicator: {
-    marginTop: 4,
   },
 });

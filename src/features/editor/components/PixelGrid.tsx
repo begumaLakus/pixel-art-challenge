@@ -1,13 +1,15 @@
 import { memo, useCallback, useMemo } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS, useSharedValue } from 'react-native-reanimated';
 
-import { CyberArcade } from '@/constants/theme';
+import { colors } from '@/src/theme';
 
 interface PixelGridProps {
   pixels: string[];
   resolution: number;
+  /** Çizim alanının en fazla kenar uzunluğu (px); hücreler tam piksele yuvarlanır. */
+  size: number;
   onStrokeStart: () => void;
   onStrokeEnd: () => void;
   onPaintPixels: (indices: number[]) => void;
@@ -16,53 +18,36 @@ interface PixelGridProps {
 interface PixelCellProps {
   color: string;
   size: number;
-  borderRadius: number;
-  cellBorderWidth: number;
+  borderWidth: number;
 }
 
 interface PixelRowProps {
   colors: string[];
   size: number;
-  borderRadius: number;
-  cellBorderWidth: number;
+  borderWidth: number;
 }
 
-const MAX_GRID_SIZE = 430;
-const HORIZONTAL_PADDING = 20;
-const CELL_BORDER_COLOR = 'rgba(90, 75, 65, 0.18)';
 const NO_INDEX = -1;
 
-// styles.grid.borderWidth ile birebir aynı olmalı - hem çizim
-// alanının gerçek boyutunu hem de dokunuş koordinatı dönüşümünü
-// bu sabite göre hesaplıyoruz.
-const GRID_BORDER_WIDTH = 2;
-
-const PixelCell = memo(
-  ({ color, size, borderRadius, cellBorderWidth }: PixelCellProps) => (
-    <View
-      pointerEvents="none"
-      style={{
-        width: size,
-        height: size,
-        backgroundColor: color,
-        borderWidth: cellBorderWidth,
-        borderColor: CELL_BORDER_COLOR,
-        borderRadius,
-      }}
-    />
-  ),
-);
+const PixelCell = memo(({ color, size, borderWidth }: PixelCellProps) => (
+  <View
+    pointerEvents="none"
+    style={{
+      width: size,
+      height: size,
+      backgroundColor: color,
+      borderWidth,
+      borderColor: colors.gridLine,
+    }}
+  />
+));
 
 PixelCell.displayName = 'PixelCell';
 
-const areRowPropsEqual = (
-  prev: PixelRowProps,
-  next: PixelRowProps,
-): boolean => {
+const areRowPropsEqual = (prev: PixelRowProps, next: PixelRowProps): boolean => {
   if (
     prev.size !== next.size ||
-    prev.borderRadius !== next.borderRadius ||
-    prev.cellBorderWidth !== next.cellBorderWidth ||
+    prev.borderWidth !== next.borderWidth ||
     prev.colors.length !== next.colors.length
   ) {
     return false;
@@ -77,18 +62,11 @@ const areRowPropsEqual = (
   return true;
 };
 
-
 const PixelRow = memo(
-  ({ colors, size, borderRadius, cellBorderWidth }: PixelRowProps) => (
+  ({ colors: rowColors, size, borderWidth }: PixelRowProps) => (
     <View style={styles.row}>
-      {colors.map((color, index) => (
-        <PixelCell
-          key={index}
-          color={color}
-          size={size}
-          borderRadius={borderRadius}
-          cellBorderWidth={cellBorderWidth}
-        />
+      {rowColors.map((color, index) => (
+        <PixelCell key={index} color={color} size={size} borderWidth={borderWidth} />
       ))}
     </View>
   ),
@@ -97,24 +75,22 @@ const PixelRow = memo(
 
 PixelRow.displayName = 'PixelRow';
 
+/**
+ * Dokunmatik çizim ızgarası. Sürükleme sırasında atlanan hücreler çizgi
+ * interpolasyonuyla doldurulur; yalnızca değişen satırlar yeniden çizilir.
+ */
 export const PixelGrid = memo(
   ({
     pixels,
     resolution,
+    size,
     onStrokeStart,
     onStrokeEnd,
     onPaintPixels,
   }: PixelGridProps) => {
-    const { width } = useWindowDimensions();
-
-    const gridSize = Math.min(width - HORIZONTAL_PADDING, MAX_GRID_SIZE);
-
-   
-    const contentSize = gridSize - GRID_BORDER_WIDTH * 2;
-    const pixelSize = contentSize / resolution;
-
-    const cellBorderWidth = resolution === 16 ? 0.45 : 0.3;
-    const cellBorderRadius = resolution === 16 ? 1.5 : 1;
+    const pixelSize = Math.floor(size / resolution);
+    const gridSize = pixelSize * resolution;
+    const borderWidth = resolution === 16 ? 0.5 : 0.35;
 
     const rows = useMemo(() => {
       const result: string[][] = [];
@@ -126,26 +102,16 @@ export const PixelGrid = memo(
       return result;
     }, [pixels, resolution]);
 
-    
     const lastIndex = useSharedValue<number>(NO_INDEX);
 
     const getPixelIndex = useCallback(
       (x: number, y: number): number => {
         'worklet';
 
-        
-        const localX = x - GRID_BORDER_WIDTH;
-        const localY = y - GRID_BORDER_WIDTH;
+        const column = Math.floor(x / pixelSize);
+        const row = Math.floor(y / pixelSize);
 
-        const column = Math.floor(localX / pixelSize);
-        const row = Math.floor(localY / pixelSize);
-
-        if (
-          column < 0 ||
-          column >= resolution ||
-          row < 0 ||
-          row >= resolution
-        ) {
+        if (column < 0 || column >= resolution || row < 0 || row >= resolution) {
           return NO_INDEX;
         }
 
@@ -160,20 +126,17 @@ export const PixelGrid = memo(
 
         const startRow = Math.floor(startIndex / resolution);
         const startColumn = startIndex % resolution;
-
         const endRow = Math.floor(endIndex / resolution);
         const endColumn = endIndex % resolution;
 
         const deltaColumn = endColumn - startColumn;
         const deltaRow = endRow - startRow;
-
         const steps = Math.max(Math.abs(deltaColumn), Math.abs(deltaRow));
 
         const indices: number[] = [];
 
         for (let step = 0; step <= steps; step += 1) {
           const progress = steps === 0 ? 0 : step / steps;
-
           const column = Math.round(startColumn + deltaColumn * progress);
           const row = Math.round(startRow + deltaRow * progress);
 
@@ -185,7 +148,6 @@ export const PixelGrid = memo(
       [resolution],
     );
 
-    
     const paintAt = useCallback(
       (x: number, y: number, isNewStroke: boolean): void => {
         'worklet';
@@ -258,22 +220,15 @@ export const PixelGrid = memo(
     return (
       <GestureDetector gesture={gesture}>
         <View
-          style={[
-            styles.grid,
-            {
-              width: gridSize,
-              height: gridSize,
-              borderRadius: resolution === 16 ? 12 : 8,
-            },
-          ]}
+          accessibilityLabel="Çizim tuvali"
+          style={[styles.grid, { width: gridSize, height: gridSize }]}
         >
           {rows.map((rowColors, rowIndex) => (
             <PixelRow
               key={rowIndex}
               colors={rowColors}
               size={pixelSize}
-              borderRadius={cellBorderRadius}
-              cellBorderWidth={cellBorderWidth}
+              borderWidth={borderWidth}
             />
           ))}
         </View>
@@ -288,26 +243,7 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'column',
     overflow: 'hidden',
-
-    // Çizim alanının kendisi BEYAZ kalacak.
-    backgroundColor: '#FFFFFF',
-
-    // Turuncu/amber çerçeve (marka rengi ile aynı: CyberArcade.gold)
-    borderWidth: GRID_BORDER_WIDTH,
-    borderColor: CyberArcade.gold,
-
-    // Tema uyumlu, yumuşak glow gölge
-    shadowColor: CyberArcade.gold,
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 16,
-    elevation: 6,
+    backgroundColor: colors.canvasBackground,
   },
-
-  row: {
-    flexDirection: 'row',
-  },
+  row: { flexDirection: 'row' },
 });

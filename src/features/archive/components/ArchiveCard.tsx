@@ -1,267 +1,116 @@
-import type { Timestamp } from 'firebase/firestore';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import { CyberArcade, Elevation, Radius, Spacing } from '@/constants/theme';
-import { PixelGrid } from '@/src/features/editor/components/PixelGrid';
+import { AppText } from '@/src/components/ui/AppText';
+import { Chip } from '@/src/components/ui/Chip';
+import { PixelArt } from '@/src/components/ui/PixelArt';
+import { PixelSprite } from '@/src/components/ui/PixelSprite';
+import { StickerBox } from '@/src/components/ui/StickerBox';
+import { getChallengeThemeStyle } from '@/src/features/challenges/constants/challengeThemes';
+import { colors, radius, spacing, stroke } from '@/src/theme';
+
+import { ShareArtButton } from '@/src/features/share/ShareArtButton';
+import { TimelapseButton } from '@/src/features/submission/components/TimelapseButton';
 
 import type { ArchivedChallenge } from '../types/types';
+import { formatTurkishDate } from '../utils/formatDate';
 
 interface ArchiveCardProps {
   archivedChallenge: ArchivedChallenge;
 }
 
-// ArchiveScreen ile aynı "rose gold" vurgu — arşiv bölümünü diğer
-// (canlı/magenta) ekranlardan görsel olarak ayırt eden bilinçli tercih.
-const ARCHIVE_ACCENT = '#E8A0BE';
+const ART_SIZE = 108;
 
-/*
- * Tema koduna göre ikon/etiket.
- * ChallengeScreen içindeki eşleştirmenin arşiv karşılığı; oradaki map
- * export edilmediği ve o dosyaya dokunmamam gerektiği için burada
- * ayrıca tutuluyor.
- */
-const THEME_ICONS: Record<string, { icon: string; label: string }> = {
-  uzay_macerasi: { icon: '🚀', label: 'UZAY' },
-  cilgin_canlilar: { icon: '🐱', label: 'CANLILAR' },
-  masalsi_doga: { icon: '🍄', label: 'DOĞA' },
-  gece_acikmalari: { icon: '🍕', label: 'YEMEK' },
-  buyulu_dunyam: { icon: '🧙‍♂️', label: 'BÜYÜ' },
-  nostalji_atari: { icon: '🕹️', label: 'ATARİ' },
-  gelecegin_sehri: { icon: '🤖', label: 'CYBER' },
-  derin_okyanus: { icon: '🐙', label: 'OKYANUS' },
-  sevimli_canavarlar: { icon: '👾', label: 'CANAVAR' },
-  cilgin_araclar: { icon: '🏎️', label: 'ARAÇ' },
-  perili_gece: { icon: '👻', label: 'PERİLİ' },
-  sira_disi_meslekler: { icon: '👨‍🔬', label: 'MESLEK' },
-};
-
-const MONTHS_TR = [
-  'Ocak',
-  'Şubat',
-  'Mart',
-  'Nisan',
-  'Mayıs',
-  'Haziran',
-  'Temmuz',
-  'Ağustos',
-  'Eylül',
-  'Ekim',
-  'Kasım',
-  'Aralık',
-];
-
-/**
- * Timestamp eski dokümanlarda eksik olabileceği için toDate()
- * doğrudan çağrılmıyor. Okunamazsa null döner.
- */
-const formatDate = (value: Timestamp | null | undefined): string | null => {
-  const date = value?.toDate?.();
-
-  if (!date) {
-    return null;
-  }
-
-  return `${date.getDate()} ${MONTHS_TR[date.getMonth()]} ${date.getFullYear()}`;
-};
-
-export const ArchiveCard = ({ archivedChallenge }: ArchiveCardProps) => {
+/** Tamamlanmış bir challenge: tema, tarih ve kazanan çizim. */
+export const ArchiveCard = memo(({ archivedChallenge }: ArchiveCardProps) => {
   const { challenge, winnerSubmission } = archivedChallenge;
-
-  const themeAsset = THEME_ICONS[challenge.theme] ?? {
-    icon: '🎨',
-    label: challenge.theme?.toUpperCase() ?? 'TEMA',
-  };
-
-  /*
-   * completedAt Cloud Function tarafından yazılıyor ama eski
-   * kayıtlarda olmayabilir; o durumda endsAt'e düşüyoruz.
-   */
-  const completedLabel =
-    formatDate(challenge.completedAt) ?? formatDate(challenge.endsAt);
+  const { accent, sprite } = getChallengeThemeStyle(challenge.theme);
+  const date = formatTurkishDate(challenge.completedAt ?? challenge.endsAt);
 
   return (
-    <View style={styles.card}>
-      {/* ÜST BİLGİ */}
-      <View style={styles.header}>
-        <View style={styles.headerTopRow}>
-          <View style={styles.themeTag}>
-            <Text style={styles.themeTagText}>
-              {themeAsset.icon} {themeAsset.label}
-            </Text>
-          </View>
-
-          {completedLabel && (
-            <Text style={styles.dateText}>{completedLabel}</Text>
-          )}
-        </View>
-
-        <Text style={styles.title}>{challenge.title}</Text>
-
-        {challenge.description && (
-          <Text numberOfLines={2} style={styles.description}>
-            {challenge.description}
-          </Text>
-        )}
-      </View>
-
-      {/* KAZANAN ÇİZİM */}
+    <StickerBox radius={radius.lg} background={accent} contentStyle={styles.card}>
       {winnerSubmission ? (
-        <>
-          <View style={styles.winnerBanner}>
-            <Text style={styles.winnerBannerText}>🏆 KAZANAN ÇİZİM</Text>
-
-            <Text style={styles.voteCountText}>
-              {winnerSubmission.voteCount ?? 0} oy
-            </Text>
+        <View>
+          <PixelArt
+            pixels={winnerSubmission.pixels}
+            resolution={winnerSubmission.resolution}
+            size={ART_SIZE}
+            style={styles.art}
+          />
+          <View style={styles.trophy}>
+            <PixelSprite name="trophy" cell={3} />
           </View>
-
-          {/*
-            PixelGrid dokunma olaylarını yakalıyor; arşiv salt okunur
-            olduğu için pointerEvents="none" ile devre dışı bırakıyoruz.
-            Bu aynı zamanda listenin kaydırılmasını da engellemiyor.
-          */}
-          <View pointerEvents="none" style={styles.gridWrapper}>
-            <PixelGrid
-              pixels={winnerSubmission.pixels}
-              resolution={winnerSubmission.resolution}
-              onStrokeStart={() => {}}
-              onStrokeEnd={() => {}}
-              onPaintPixels={() => {}}
-            />
-          </View>
-        </>
+        </View>
       ) : (
-        <View style={styles.noWinner}>
-          <Text style={styles.noWinnerIcon}>🫥</Text>
-
-          <Text style={styles.noWinnerTitle}>Katılım Olmadı</Text>
-
-          <Text style={styles.noWinnerMessage}>
-            Bu meydan okumaya hiç çizim gönderilmedi.
-          </Text>
+        <View style={[styles.art, styles.noWinner]}>
+          <PixelSprite name={sprite} cell={6} />
         </View>
       )}
-    </View>
+
+      <View style={styles.info}>
+        {date ? <AppText variant="pixel">{date}</AppText> : null}
+
+        <AppText variant="title" numberOfLines={2}>
+          {challenge.title}
+        </AppText>
+
+        {winnerSubmission ? (
+          <>
+            <Chip
+              label={`Kazanan · ${winnerSubmission.voteCount ?? 0} oy`}
+              icon="trophy"
+              background={colors.white}
+            />
+            <View style={styles.actions}>
+              <TimelapseButton submission={winnerSubmission} compact />
+              <ShareArtButton
+                submission={winnerSubmission}
+                themeTitle={challenge.title}
+                theme={challenge.theme}
+                headline="Günün şampiyonu"
+                detail={`${winnerSubmission.voteCount ?? 0} oy${date ? ` · ${date}` : ''}`}
+              />
+            </View>
+          </>
+        ) : (
+          <Chip
+            label={challenge.winnerSubmissionId ? 'Çizim kaldırıldı' : 'Katılım olmadı'}
+            background={colors.white}
+          />
+        )}
+      </View>
+    </StickerBox>
   );
-};
+});
+
+ArchiveCard.displayName = 'ArchiveCard';
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
-    borderRadius: Radius.xl,
-    overflow: 'hidden',
-    marginBottom: Spacing.md,
-    paddingBottom: Spacing.sm + 6,
-    backgroundColor: CyberArcade.surface,
-    borderColor: CyberArcade.border,
-    ...Elevation.card,
-  },
-
-  header: {
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.sm + 6,
-    paddingBottom: Spacing.sm + 4,
-  },
-
-  headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.sm + 2,
+    gap: spacing.lg,
+    padding: spacing.md,
   },
-
-  themeTag: {
-    paddingHorizontal: Spacing.sm + 2,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radius.sm - 2,
-    backgroundColor: ARCHIVE_ACCENT,
+  art: {
+    width: ART_SIZE,
+    height: ART_SIZE,
+    borderWidth: stroke.base,
+    borderColor: colors.ink,
+    borderRadius: radius.md,
+    backgroundColor: colors.white,
   },
-
-  themeTagText: {
-    color: '#2B0E1E',
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.8,
+  noWinner: { alignItems: 'center', justifyContent: 'center' },
+  trophy: {
+    position: 'absolute',
+    right: -8,
+    bottom: -8,
+    padding: 3,
+    backgroundColor: colors.white,
+    borderWidth: stroke.thin,
+    borderColor: colors.ink,
+    borderRadius: radius.sm,
   },
-
-  dateText: {
-    color: CyberArcade.mutedText,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-
-  title: {
-    color: CyberArcade.textPrimary,
-    fontSize: 20,
-    fontWeight: '900',
-    marginBottom: Spacing.xs + 2,
-  },
-
-  description: {
-    color: CyberArcade.secondaryText,
-    fontSize: 13,
-    lineHeight: 19,
-    fontWeight: '500',
-  },
-
-  winnerBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.sm + 2,
-  },
-
-  winnerBannerText: {
-    color: CyberArcade.gold,
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-
-  voteCountText: {
-    color: ARCHIVE_ACCENT,
-    fontSize: 13,
-    fontWeight: '800',
-  },
-
-  /*
-   * Yatay padding yok: PixelGrid kendi genişliğini
-   * (ekran genişliği - 20) olarak hesaplıyor ve kart bu
-   * genişliğe tam oturuyor.
-   */
-  gridWrapper: {
-    alignItems: 'center',
-  },
-
-  noWinner: {
-    marginHorizontal: Spacing.md,
-    marginBottom: Spacing.xs,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.md,
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    borderStyle: 'dashed',
-    borderColor: CyberArcade.border,
-    alignItems: 'center',
-  },
-
-  noWinnerIcon: {
-    fontSize: 32,
-    marginBottom: Spacing.sm,
-  },
-
-  noWinnerTitle: {
-    color: CyberArcade.textPrimary,
-    fontSize: 15,
-    fontWeight: '800',
-    marginBottom: Spacing.xs,
-  },
-
-  noWinnerMessage: {
-    color: CyberArcade.secondaryText,
-    fontSize: 13,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
+  info: { flex: 1, gap: spacing.sm },
+  actions: { flexDirection: 'row', gap: spacing.sm, alignSelf: 'flex-start' },
 });

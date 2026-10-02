@@ -3,13 +3,29 @@ import { describe, test } from 'node:test';
 
 const FAKE_AUTH_INSTANCE = { __authInstance: true };
 
+const FAKE_PERSISTENCE = { __persistence: true };
+
+const mockPlatform = (t: any, os: string, storage: unknown = { __storage: true }) => {
+  t.mock.module('react-native', {
+    namedExports: { Platform: { OS: os } },
+  });
+  t.mock.module('@react-native-async-storage/async-storage', {
+    defaultExport: storage,
+  });
+};
+
 const mockFirebaseAuth = (
   t: any,
   overrides: Record<string, unknown> = {},
+  platform = 'ios',
 ) => {
+  mockPlatform(t, platform);
   t.mock.module('firebase/auth', {
     namedExports: {
       getAuth: () => FAKE_AUTH_INSTANCE,
+      connectAuthEmulator: () => {},
+      initializeAuth: () => FAKE_AUTH_INSTANCE,
+      getReactNativePersistence: () => FAKE_PERSISTENCE,
       createUserWithEmailAndPassword: async () => ({
         user: { uid: 'u1', email: 'test@example.com' },
       }),
@@ -118,5 +134,87 @@ describe('authServices.loginUser / logoutUser', () => {
 
     await logoutUser();
     assert.equal(signOutFn.mock.calls.length, 1);
+  });
+});
+
+
+describe('authServices oturum kalıcılığı', () => {
+  test('native platformda AsyncStorage kalıcılığıyla initializeAuth çağrılır', async (t) => {
+    const storage = { __storage: 'async-storage' };
+    const initializeAuthFn = t.mock.fn((..._args: unknown[]) => FAKE_AUTH_INSTANCE);
+    const getAuthFn = t.mock.fn(() => ({ __getAuth: true }));
+    const persistenceFn = t.mock.fn((_storage: unknown) => FAKE_PERSISTENCE);
+
+    mockPlatform(t, 'ios', storage);
+    t.mock.module('firebase/auth', {
+      namedExports: {
+        getAuth: getAuthFn,
+        connectAuthEmulator: () => {},
+        initializeAuth: initializeAuthFn,
+        getReactNativePersistence: persistenceFn,
+        createUserWithEmailAndPassword: async () => ({}),
+        signInWithEmailAndPassword: async () => ({}),
+        signOut: async () => {},
+      },
+    });
+    mockFirestore(t, async () => {});
+
+    const { auth } = await import(`./authServices.ts?case=native-${Date.now()}`);
+
+    assert.equal(auth, FAKE_AUTH_INSTANCE);
+    assert.equal(initializeAuthFn.mock.calls.length, 1);
+    assert.equal(persistenceFn.mock.calls[0].arguments[0], storage);
+    assert.deepEqual(initializeAuthFn.mock.calls[0].arguments[1], {
+      persistence: FAKE_PERSISTENCE,
+    });
+    assert.equal(getAuthFn.mock.calls.length, 0);
+  });
+
+  test("web'de getAuth kullanılır, initializeAuth çağrılmaz", async (t) => {
+    const initializeAuthFn = t.mock.fn(() => FAKE_AUTH_INSTANCE);
+    const getAuthFn = t.mock.fn(() => ({ __web: true }));
+
+    mockPlatform(t, 'web');
+    t.mock.module('firebase/auth', {
+      namedExports: {
+        getAuth: getAuthFn,
+        connectAuthEmulator: () => {},
+        initializeAuth: initializeAuthFn,
+        getReactNativePersistence: () => FAKE_PERSISTENCE,
+        createUserWithEmailAndPassword: async () => ({}),
+        signInWithEmailAndPassword: async () => ({}),
+        signOut: async () => {},
+      },
+    });
+    mockFirestore(t, async () => {});
+
+    const { auth } = await import(`./authServices.ts?case=web-${Date.now()}`);
+
+    assert.deepEqual(auth, { __web: true });
+    assert.equal(initializeAuthFn.mock.calls.length, 0);
+  });
+
+  test('initializeAuth zaten çağrılmışsa (Fast Refresh) mevcut örneğe düşer', async (t) => {
+    const existing = { __existing: true };
+
+    mockPlatform(t, 'android');
+    t.mock.module('firebase/auth', {
+      namedExports: {
+        getAuth: () => existing,
+        connectAuthEmulator: () => {},
+        initializeAuth: () => {
+          throw new Error('auth/already-initialized');
+        },
+        getReactNativePersistence: () => FAKE_PERSISTENCE,
+        createUserWithEmailAndPassword: async () => ({}),
+        signInWithEmailAndPassword: async () => ({}),
+        signOut: async () => {},
+      },
+    });
+    mockFirestore(t, async () => {});
+
+    const { auth } = await import(`./authServices.ts?case=refresh-${Date.now()}`);
+
+    assert.equal(auth, existing);
   });
 });

@@ -1,22 +1,30 @@
 import {
-  addDoc,
   collection,
   deleteDoc,
   doc,
   getDocs,
+  limit,
   query,
   serverTimestamp,
+  setDoc,
   where,
 } from 'firebase/firestore';
 
 import { db } from '../../../services/firebase/firestore';
 import { auth } from '../../auth/services/authServices';
 
-import { limit } from 'firebase/firestore';
 import type {
   CreateSubmissionData,
   Submission,
 } from '../types/types';
+
+/**
+ * Gönderi dokümanının ID'si deterministiktir: `${challengeId}_${userId}`.
+ * `firestore.rules` bu formatı zorunlu kıldığı için bir kullanıcı bir
+ * challenge'a sunucu tarafında da en fazla bir çizim gönderebilir.
+ */
+const buildSubmissionId = (challengeId: string, userId: string): string =>
+  `${challengeId}_${userId}`;
 
 export const createSubmission = async (
   data: CreateSubmissionData,
@@ -45,19 +53,19 @@ export const createSubmission = async (
     );
   }
 
-  const submissionRef = await addDoc(
-    collection(db, 'submissions'),
-    {
-      userId: user.uid,
-      challengeId: data.challengeId,
-      pixels: data.pixels,
-      resolution: data.resolution,
-      voteCount: 0,
-      createdAt: serverTimestamp(),
-    },
-  );
+  const submissionId = buildSubmissionId(data.challengeId, user.uid);
 
-  return submissionRef.id;
+  await setDoc(doc(db, 'submissions', submissionId), {
+    userId: user.uid,
+    challengeId: data.challengeId,
+    pixels: data.pixels,
+    resolution: data.resolution,
+    voteCount: 0,
+    ...(data.moves ? { moves: data.moves } : {}),
+    createdAt: serverTimestamp(),
+  });
+
+  return submissionId;
 };
 
 export const getSubmissionsByChallenge = async (

@@ -1,13 +1,23 @@
 import {
+  connectFirestoreEmulator,
   doc,
   getFirestore,
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore';
 
+import { EMULATOR_HOST, EMULATOR_PORTS, USE_EMULATOR } from './emulator';
 import { firebaseApp } from './firebaseConfig';
 
 const db = getFirestore(firebaseApp);
+
+if (USE_EMULATOR) {
+  try {
+    connectFirestoreEmulator(db, EMULATOR_HOST, EMULATOR_PORTS.firestore);
+  } catch {
+    // Fast Refresh: emülatör bağlantısı zaten kurulmuş.
+  }
+}
 
 export const createUserProfile = async (
   userId: string,

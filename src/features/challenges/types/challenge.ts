@@ -18,6 +18,11 @@ export interface Challenge {
   startsAt: Timestamp;
   endsAt: Timestamp;
   status: ChallengeStatus;
+  /**
+   * Günün paleti: editörde sadece bu renkler sunulur (yaratıcı kısıt).
+   * Eski challenge'larda yoktur; editör varsayılan palete düşer.
+   */
+  palette?: string[];
   winnerSubmissionId: string | null;
   createdAt: Timestamp;
   completedAt: Timestamp | null;

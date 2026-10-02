@@ -1,0 +1,218 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function challengePath(challengeId) {
+      return /databases/$(database)/documents/challenges/$(challengeId);
+    }
+
+    function submissionPath(submissionId) {
+      return /databases/$(database)/documents/submissions/$(submissionId);
+    }
+
+    /**
+     * Challenge şu an gönderim/oylama için açık mı? Süre kontrolü istemci
+     * saatine değil sunucu saatine (request.time) göre yapılır; challenge'ın
+     * `status`'ünü (active -> completed) Cloud Function belirler ama
+     * `endsAt` geçtiği an yazma kapanır, zamanlayıcının gecikmesine bağlı
+     * kalmaz.
+     */
+    function isChallengeOpen(challengeId) {
+      return exists(challengePath(challengeId))
+        && get(challengePath(challengeId)).data.status == 'active'
+        && request.time >= get(challengePath(challengeId)).data.startsAt
+        && request.time < get(challengePath(challengeId)).data.endsAt;
+    }
+
+    /**
+     * users/{userId} — src/services/firebase/firestore.ts (createUserProfile)
+     * tarafından, kayıt sırasında { email, createdAt: serverTimestamp() }
+     * ile oluşturuluyor. Başka bir kullanıcının profili okunmaz/güncellenmez;
+     * erişim sahibiyle sınırlıdır. Sahibi sadece `pushToken` alanını
+     * güncelleyebilir; `stats` alanını yalnızca sunucu yazar.
+     */
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasAll(['email', 'createdAt'])
+        && request.resource.data.email is string
+        && request.resource.data.createdAt == request.time;
+
+      // Kullanıcı yalnızca kendi push token'ını yazabilir/silebilir; istatistik
+      // (stats) gibi diğer alanları sadece Cloud Functions (Admin SDK) yazar.
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pushToken'])
+        && (!('pushToken' in request.resource.data)
+            || (request.resource.data.pushToken is string
+                && request.resource.data.pushToken.size() <= 200));
+
+      allow delete: if false;
+    }
+
+    /**
+     * challenges/{challengeId} — SADECE Cloud Functions (Admin SDK, bu
+     * kuralları atlar) yazabilir: functions/src/index.ts içindeki
+     * manageChallenges (yeni challenge oluşturma / kazananı belirleyip
+     * tamamlama). Client tarafı (challengeService, archiveService) sadece
+     * okuyor.
+     */
+    match /challenges/{challengeId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    /**
+     * submissions/{submissionId} — src/features/submission/services/
+     * submissionService.ts (createSubmission/deleteSubmission).
+     *
+     * - create: doküman ID'si HER ZAMAN `${challengeId}_${uid}`. Bu, "bir
+     *   kullanıcı bir challenge'a en fazla bir çizim gönderebilir" kısıtını
+     *   sunucuda garanti eder (ikinci create, var olan dokümana yazma
+     *   olacağı için `update` kuralına takılıp reddedilir). Challenge açık
+     *   olmalı, ızgara boyutu 16/32 olmalı, piksel sayısı boyutun karesine
+     *   eşit olmalı, voteCount 0 ile başlamalı ve fazladan alan olmamalı.
+     *   İsteğe bağlı `moves` (time-lapse kaydı) en fazla 60000 karakterlik
+     *   bir string olabilir (MAX_ENCODED_LENGTH ile aynı).
+     * - update: HER ZAMAN false. voteCount SADECE functions/src/index.ts
+     *   içindeki onVoteWritten (Admin SDK) tarafından yazılıyor.
+     * - delete: sadece sahibi ve sadece challenge açıkken; biten bir
+     *   challenge'ın kazananı/arşivi sonradan değiştirilemez.
+     * - read: giriş yapmış herkese açık (oylama ve arşiv ekranları).
+     */
+    match /submissions/{submissionId} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(
+          ['userId', 'challengeId', 'pixels', 'resolution', 'voteCount', 'moves', 'createdAt'])
+        && request.resource.data.keys().hasAll(
+          ['userId', 'challengeId', 'pixels', 'resolution', 'voteCount', 'createdAt'])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.challengeId is string
+        && submissionId == request.resource.data.challengeId + '_' + request.auth.uid
+        && isChallengeOpen(request.resource.data.challengeId)
+        && request.resource.data.resolution in [16, 32]
+        && request.resource.data.pixels is list
+        && request.resource.data.pixels.size()
+            == request.resource.data.resolution * request.resource.data.resolution
+        && request.resource.data.voteCount == 0
+        && (!('moves' in request.resource.data)
+            || (request.resource.data.moves is string
+                && request.resource.data.moves.size() <= 60000))
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if false;
+
+      allow delete: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && isChallengeOpen(resource.data.challengeId);
+    }
+
+    /**
+     * votes/{voteId} — src/features/voting/services/votingService.ts.
+     * Doküman ID'si HER ZAMAN `${challengeId}_${userId}`: bir kullanıcı bir
+     * challenge'da en fazla bir oy kullanabilir.
+     *
+     * create/update, oy hangi çizime verilirse verilsin şunları sunucuda
+     * zorunlu kılar: challenge açık (süre dolmadı), çizim gerçekten var ve
+     * AYNI challenge'a ait, ve çizimin sahibi oy verenin kendisi DEĞİL.
+     * delete: sahibi, yalnızca challenge açıkken (oy süre bitince kilitlenir).
+     */
+    match /votes/{voteId} {
+      allow read: if isSignedIn() && voteId.matches('.*_' + request.auth.uid);
+
+      allow create, update: if isSignedIn()
+        && request.resource.data.keys().hasOnly(
+          ['submissionId', 'challengeId', 'userId', 'createdAt'])
+        && request.resource.data.keys().hasAll(
+          ['submissionId', 'challengeId', 'userId', 'createdAt'])
+        && request.resource.data.challengeId is string
+        && request.resource.data.submissionId is string
+        && voteId == request.resource.data.challengeId + '_' + request.auth.uid
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && isChallengeOpen(request.resource.data.challengeId)
+        && exists(submissionPath(request.resource.data.submissionId))
+        && get(submissionPath(request.resource.data.submissionId)).data.challengeId
+            == request.resource.data.challengeId
+        && get(submissionPath(request.resource.data.submissionId)).data.userId
+            != request.auth.uid;
+
+      allow delete: if isSignedIn()
+        && voteId.matches('.*_' + request.auth.uid)
+        && isChallengeOpen(resource.data.challengeId);
+    }
+
+    /**
+     * reports/{reportId} — kullanıcı içeriğini şikayet etme (App Store
+     * Guideline 1.2). Doküman ID'si `${submissionId}_${reporterId}`: bir
+     * kullanıcı bir çizimi en fazla bir kez şikayet edebilir. Şikayet edilen
+     * çizim gerçekten var olmalı ve sahibi `reportedUserId` ile eşleşmeli;
+     * kendi çizimini şikayet edemezsin. İstemci raporları okuyamaz, değiştirip
+     * silemez — yalnızca yönetici (Admin SDK / konsol) görür.
+     */
+    match /reports/{reportId} {
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(
+          ['submissionId', 'challengeId', 'reportedUserId', 'reporterId', 'reason', 'createdAt'])
+        && request.resource.data.keys().hasAll(
+          ['submissionId', 'challengeId', 'reportedUserId', 'reporterId', 'reason', 'createdAt'])
+        && request.resource.data.submissionId is string
+        && request.resource.data.reporterId == request.auth.uid
+        && reportId == request.resource.data.submissionId + '_' + request.auth.uid
+        && request.resource.data.reason in ['inappropriate', 'spam', 'other']
+        && exists(submissionPath(request.resource.data.submissionId))
+        && get(submissionPath(request.resource.data.submissionId)).data.userId
+            == request.resource.data.reportedUserId
+        && get(submissionPath(request.resource.data.submissionId)).data.challengeId
+            == request.resource.data.challengeId
+        && request.resource.data.reportedUserId != request.auth.uid
+        && request.resource.data.createdAt == request.time;
+
+      allow read, update, delete: if false;
+    }
+
+    /**
+     * users/{userId}/blocks/{blockedId} — kullanıcının engellediği kişiler.
+     * Yalnızca sahibi okur/yazar/siler; kendini engelleyemez.
+     */
+    match /users/{userId}/blocks/{blockedId} {
+      allow read: if isOwner(userId);
+
+      allow create: if isOwner(userId)
+        && blockedId != userId
+        && request.resource.data.keys().hasOnly(['createdAt'])
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if false;
+      allow delete: if isOwner(userId);
+    }
+
+    /**
+     * aiRateLimits/{docId} — functions/src/index.ts içindeki
+     * enforceRateLimit tarafından SADECE Admin SDK ile okunup yazılıyor
+     * (bkz. getCreativeInspiration). Client'ın buraya hiç erişimi yok;
+     * varlığı bile bir uygulama detayı, dışarı sızdırılmamalı.
+     */
+    match /aiRateLimits/{docId} {
+      allow read, write: if false;
+    }
+
+    // Yukarıda eşleşmeyen her şey: reddet. (Firestore zaten eşleşmeyen
+    // yollarda varsayılan olarak reddeder; bu blok sadece niyeti açıkça
+    // yazılı hale getiriyor.)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
