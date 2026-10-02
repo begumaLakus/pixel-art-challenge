@@ -131,6 +131,3 @@ scripts/              Emülatör tohumlama ve yardımcı betikler
 
 Krem zemin, kalın siyah kontur ve sert (bulanıksız) ofset gölge; günün temasına göre değişen tek bir vurgu rengi. Başlıklar Space Grotesk, etiketler Silkscreen (pixel font). Emoji yerine uygulamanın kendi pixel art maskotu ve sprite'ları kullanılır.
 
-## Lisans
-
-MIT
