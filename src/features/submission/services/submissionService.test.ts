@@ -19,7 +19,7 @@ describe('submissionService.createSubmission', () => {
     mockDbAndAuth(t, null);
     t.mock.module('firebase/firestore', {
       namedExports: {
-        addDoc: async () => ({ id: 'new-id' }),
+        setDoc: async () => {},
         collection: () => ({}),
         deleteDoc: async () => {},
         doc: () => ({}),
@@ -49,11 +49,11 @@ describe('submissionService.createSubmission', () => {
   test('kullanıcı bu challenge için zaten gönderi yaptıysa hata fırlatır', async (t) => {
     mockDbAndAuth(t, { uid: 'user1' });
 
-    const addDocFn = t.mock.fn(async () => ({ id: 'new-id' }));
+    const setDocFn = t.mock.fn(async () => {});
 
     t.mock.module('firebase/firestore', {
       namedExports: {
-        addDoc: addDocFn,
+        setDoc: setDocFn,
         collection: () => ({}),
         deleteDoc: async () => {},
         doc: () => ({}),
@@ -78,22 +78,20 @@ describe('submissionService.createSubmission', () => {
         }),
       /Bu challenge için zaten bir çizim gönderdiniz\./,
     );
-    assert.equal(addDocFn.mock.calls.length, 0);
+    assert.equal(setDocFn.mock.calls.length, 0);
   });
 
-  test('geçerli gönderi oluşturulur ve doğru payload ile addDoc çağrılır', async (t) => {
+  test("geçerli gönderi deterministik id ile ve doğru payload'la setDoc'a yazılır", async (t) => {
     mockDbAndAuth(t, { uid: 'user1' });
 
-    const addDocFn = t.mock.fn(async (_ref: unknown, payload: unknown) => ({
-      id: 'new-submission-id',
-    }));
+    const setDocFn = t.mock.fn(async (_ref: unknown, _payload: unknown) => {});
 
     t.mock.module('firebase/firestore', {
       namedExports: {
-        addDoc: addDocFn,
+        setDoc: setDocFn,
         collection: () => ({}),
         deleteDoc: async () => {},
-        doc: () => ({}),
+        doc: (_db: unknown, collectionName: string, id: string) => ({ collectionName, id }),
         getDocs: async () => ({ empty: true, docs: [] }),
         query: () => ({}),
         serverTimestamp: () => ({ __server: true }),
@@ -112,13 +110,14 @@ describe('submissionService.createSubmission', () => {
       resolution: 16,
     });
 
-    assert.equal(id, 'new-submission-id');
-    assert.equal(addDocFn.mock.calls.length, 1);
+    assert.equal(id, 'c1_user1');
+    assert.equal(setDocFn.mock.calls.length, 1);
 
-    const [, payload] = addDocFn.mock.calls[0].arguments as [
-      unknown,
+    const [ref, payload] = setDocFn.mock.calls[0].arguments as [
+      { collectionName: string; id: string },
       Record<string, unknown>,
     ];
+    assert.deepEqual(ref, { collectionName: 'submissions', id: 'c1_user1' });
     assert.equal(payload.userId, 'user1');
     assert.equal(payload.challengeId, 'c1');
     assert.deepEqual(payload.pixels, ['#fff', '#000']);
@@ -149,7 +148,7 @@ describe('submissionService.getSubmissionsByChallenge', () => {
 
     t.mock.module('firebase/firestore', {
       namedExports: {
-        addDoc: async () => ({ id: 'x' }),
+        setDoc: async () => {},
         collection: () => ({}),
         deleteDoc: async () => {},
         doc: () => ({}),
@@ -189,7 +188,7 @@ describe('submissionService.getMySubmissionForChallenge', () => {
     const getDocsFn = t.mock.fn(async () => ({ empty: true, docs: [] }));
     t.mock.module('firebase/firestore', {
       namedExports: {
-        addDoc: async () => ({ id: 'x' }),
+        setDoc: async () => {},
         collection: () => ({}),
         deleteDoc: async () => {},
         doc: () => ({}),
@@ -215,7 +214,7 @@ describe('submissionService.getMySubmissionForChallenge', () => {
 
     t.mock.module('firebase/firestore', {
       namedExports: {
-        addDoc: async () => ({ id: 'x' }),
+        setDoc: async () => {},
         collection: () => ({}),
         deleteDoc: async () => {},
         doc: () => ({}),
@@ -239,7 +238,7 @@ describe('submissionService.getMySubmissionForChallenge', () => {
 
     t.mock.module('firebase/firestore', {
       namedExports: {
-        addDoc: async () => ({ id: 'x' }),
+        setDoc: async () => {},
         collection: () => ({}),
         deleteDoc: async () => {},
         doc: () => ({}),
@@ -285,7 +284,7 @@ describe('submissionService.deleteSubmission', () => {
 
     t.mock.module('firebase/firestore', {
       namedExports: {
-        addDoc: async () => ({ id: 'x' }),
+        setDoc: async () => {},
         collection: () => ({}),
         deleteDoc: deleteDocFn,
         doc: docFn,

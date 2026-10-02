@@ -1,27 +1,31 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
-import { CHALLENGE_THEME_ASSETS, getChallengeThemeAsset } from './challengeThemes.ts';
+import { getChallengeThemeStyle, THEME_ACCENTS } from './challengeThemes.ts';
 
-describe('getChallengeThemeAsset', () => {
-  test('bilinen bir tema için eşlenen ikon/etiket/renk döner', () => {
-    const asset = getChallengeThemeAsset('uzay_macerasi', '#000000');
-
-    assert.deepEqual(asset, CHALLENGE_THEME_ASSETS.uzay_macerasi);
-    assert.equal(asset.label, 'UZAY');
+describe('getChallengeThemeStyle', () => {
+  test('aynı tema her zaman aynı sprite ve renk döner', () => {
+    assert.deepEqual(
+      getChallengeThemeStyle('uzay_macerasi'),
+      getChallengeThemeStyle('uzay_macerasi'),
+    );
   });
 
-  test('bilinmeyen bir tema için fallback ikon + büyük harfli etiket + verilen renk döner', () => {
-    const asset = getChallengeThemeAsset('deneme_temasi', '#123456');
-
-    assert.equal(asset.icon, '🎨');
-    assert.equal(asset.label, 'DENEME_TEMASI');
-    assert.equal(asset.color, '#123456');
+  test('bilinen tema kendine özgü sprite alır', () => {
+    assert.equal(getChallengeThemeStyle('perili_gece').sprite, 'ghost');
+    assert.equal(getChallengeThemeStyle('gece_acikmalari').sprite, 'pizza');
   });
 
-  test('her tanımlı tema geçerli bir hex renk içerir', () => {
-    for (const [theme, asset] of Object.entries(CHALLENGE_THEME_ASSETS)) {
-      assert.match(asset.color, /^#[0-9A-Fa-f]{6}$/, `theme: ${theme}`);
+  test('bilinmeyen (AI üretimi) tema da geçerli sprite ve palet rengi alır', () => {
+    const style = getChallengeThemeStyle('kayip_robotlar_ormani');
+
+    assert.ok(style.sprite.length > 0);
+    assert.ok((THEME_ACCENTS as readonly string[]).includes(style.accent));
+  });
+
+  test('her vurgu rengi geçerli bir hex değerdir', () => {
+    for (const accent of THEME_ACCENTS) {
+      assert.match(accent, /^#[0-9A-Fa-f]{6}$/);
     }
   });
 });

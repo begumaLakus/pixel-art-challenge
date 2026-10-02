@@ -316,7 +316,7 @@ async function runChain(
 ): Promise<void> {
   state.busy = true;
 
-  // eslint-disable-next-line no-constant-condition
+   
   while (true) {
     const clickedId = state.pendingClick;
 
@@ -329,7 +329,7 @@ async function runChain(
     state.pendingWaiters = [];
 
     try {
-      // eslint-disable-next-line no-await-in-loop
+       
       await performVote(clickedId, challengeId);
       waiters.forEach((waiter) => waiter.resolve());
     } catch (error) {

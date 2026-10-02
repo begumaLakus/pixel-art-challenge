@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
-import { CyberArcade, Elevation, Radius, Spacing } from '@/constants/theme';
+import { colors, spacing } from '@/src/theme';
+
+import { AppText } from './AppText';
+import { StickerBox } from './StickerBox';
+import { StickerButton } from './StickerButton';
 
 export type AppAlertButtonStyle = 'default' | 'cancel' | 'destructive';
 
@@ -35,29 +39,23 @@ const DEFAULT_STATE: AppAlertState = {
 };
 
 /**
- * `Alert.alert` iOS'ta native, temaya uyumlu gözüken bir diyalog
- * gösterirken Android'de sade/varsayılan sistem diyaloğuna düşüyor — bu
- * da CyberArcade temasıyla uyumsuz, "ucuz" duruyordu. AppAlert bunun
- * yerine iki platformda da BİREBİR AYNI, temayla uyumlu (kart, renkler,
- * tipografi) özel bir modal render eder.
+ * `Alert.alert` iOS'ta native, Android'de sade sistem diyaloğu gösterir ve
+ * uygulamanın görsel diliyle uyuşmaz. AppAlert iki platformda da aynı
+ * görünen, temaya uygun bir modal render eder.
  *
- * Kullanım `Alert.alert` ile aynı imzayı taklit eder, böylece mevcut
- * çağrı yerleri sadece `Alert.alert(...)` -> `AppAlert.alert(...)`
- * olarak değişir; buton dizisi, `{ cancelable }` gibi seçenekler aynı
- * şekilde çalışır:
+ * Kullanım `Alert.alert` ile aynı imzayı taklit eder:
  *
  *   AppAlert.alert('Başlık', 'Mesaj', [
  *     { text: 'Vazgeç', style: 'cancel' },
  *     { text: 'Sil', style: 'destructive', onPress: handleDelete },
  *   ]);
  *
- * Herhangi bir ekrandan/bileşenden çağrılabilmesi için tek bir
- * `AppAlertHost` bileşeninin uygulama kökünde (app/_layout.tsx) bir kez
- * render edilmesi yeterli — aralarında minik bir pub/sub store üzerinden
- * haberleşiyorlar; ayrı bir Context/Provider sarmalamaya gerek yok.
+ * Herhangi bir yerden çağrılabilmesi için uygulama kökünde (app/_layout.tsx)
+ * bir kez `AppAlertHost` render edilir; ikisi minik bir pub/sub store
+ * üzerinden haberleşir, ayrı bir Context gerekmez.
  */
 let state: AppAlertState = DEFAULT_STATE;
-let listeners: Array<(next: AppAlertState) => void> = [];
+let listeners: ((next: AppAlertState) => void)[] = [];
 
 const notify = (): void => {
   listeners.forEach((listener) => listener(state));
@@ -88,17 +86,11 @@ const dismiss = (): void => {
 
 export const AppAlert = { alert };
 
-const variantFor = (style: AppAlertButtonStyle | undefined) => {
-  if (style === 'destructive') {
-    return { container: styles.buttonDestructive, text: styles.buttonTextDestructive };
-  }
-
-  if (style === 'cancel') {
-    return { container: styles.buttonCancel, text: styles.buttonTextCancel };
-  }
-
-  return { container: styles.buttonDefault, text: styles.buttonTextDefault };
-};
+const VARIANT_FOR_STYLE = {
+  default: 'ink',
+  cancel: 'white',
+  destructive: 'pink',
+} as const;
 
 export const AppAlertHost = () => {
   const [local, setLocal] = useState<AppAlertState>(state);
@@ -136,40 +128,28 @@ export const AppAlertHost = () => {
       onRequestClose={handleDismiss}
     >
       <Pressable style={styles.backdrop} onPress={handleDismiss}>
-        <Pressable style={styles.card} onPress={() => {}}>
-          <Text style={styles.title}>{local.title}</Text>
+        <Pressable style={styles.sheet} onPress={() => {}}>
+          <StickerBox offset={5} contentStyle={styles.card}>
+            <AppText variant="title">{local.title}</AppText>
 
-          {local.message ? (
-            <Text style={styles.message}>{local.message}</Text>
-          ) : null}
+            {local.message ? (
+              <AppText variant="body" color={colors.muted}>
+                {local.message}
+              </AppText>
+            ) : null}
 
-          <View style={[styles.buttonRow, stacked && styles.buttonColumn]}>
-            {local.buttons.map((button, index) => {
-              const variant = variantFor(button.style);
-
-              return (
-                <Pressable
+            <View style={[styles.buttonRow, stacked && styles.buttonColumn]}>
+              {local.buttons.map((button, index) => (
+                <StickerButton
                   key={`${button.text ?? 'button'}-${index}`}
-                  accessibilityRole="button"
-                  accessibilityLabel={button.text ?? 'Tamam'}
+                  label={button.text ?? 'Tamam'}
+                  variant={VARIANT_FOR_STYLE[button.style ?? 'default']}
+                  style={stacked ? undefined : styles.buttonFlex}
                   onPress={() => handleButtonPress(button)}
-                  style={({ pressed }) => [
-                    styles.button,
-                    variant.container,
-                    !stacked && styles.buttonFlex,
-                    pressed && styles.buttonPressed,
-                  ]}
-                >
-                  <Text
-                    style={[styles.buttonText, variant.text]}
-                    numberOfLines={1}
-                  >
-                    {button.text ?? 'Tamam'}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+                />
+              ))}
+            </View>
+          </StickerBox>
         </Pressable>
       </Pressable>
     </Modal>
@@ -181,94 +161,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: Spacing.lg,
-    backgroundColor: 'rgba(10, 7, 20, 0.72)',
+    padding: spacing.lg,
+    backgroundColor: 'rgba(21, 21, 21, 0.55)',
   },
-
-  card: {
-    width: '100%',
-    maxWidth: 360,
-    borderRadius: Radius.xl,
-    padding: Spacing.lg,
-    backgroundColor: CyberArcade.surface,
-    borderWidth: 1,
-    borderColor: CyberArcade.border,
-    ...Elevation.raised,
-  },
-
-  title: {
-    color: CyberArcade.textPrimary,
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.1,
-  },
-
-  message: {
-    marginTop: Spacing.xs + 2,
-    color: CyberArcade.secondaryText,
-    fontSize: 13,
-    lineHeight: 19,
-    fontWeight: '500',
-  },
-
+  sheet: { width: '100%', maxWidth: 360 },
+  card: { padding: spacing.lg, gap: spacing.sm },
   buttonRow: {
     flexDirection: 'row',
-    gap: Spacing.sm,
-    marginTop: Spacing.lg,
+    gap: spacing.sm,
+    marginTop: spacing.md,
   },
-
-  buttonColumn: {
-    flexDirection: 'column-reverse',
-  },
-
-  button: {
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.sm + 2,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-  },
-
-  buttonFlex: {
-    flex: 1,
-  },
-
-  buttonPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
-  },
-
-  buttonText: {
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.2,
-  },
-
-  buttonDefault: {
-    backgroundColor: CyberArcade.magenta,
-    borderColor: 'rgba(255, 255, 255, 0.14)',
-  },
-
-  buttonTextDefault: {
-    color: CyberArcade.white,
-  },
-
-  buttonCancel: {
-    backgroundColor: CyberArcade.surfaceInset,
-    borderColor: CyberArcade.border,
-  },
-
-  buttonTextCancel: {
-    color: CyberArcade.secondaryText,
-  },
-
-  buttonDestructive: {
-    backgroundColor: 'rgba(255, 59, 107, 0.08)',
-    borderColor: 'rgba(255, 59, 107, 0.4)',
-  },
-
-  buttonTextDestructive: {
-    color: CyberArcade.danger,
-  },
+  buttonColumn: { flexDirection: 'column-reverse' },
+  buttonFlex: { flex: 1 },
 });

@@ -6,7 +6,7 @@ const ROOT = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
 const CANDIDATE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
 
 function resolveWithExtension(absPath) {
-  if (fs.existsSync(absPath)) {
+  if (fs.existsSync(absPath) && fs.statSync(absPath).isFile()) {
     return absPath;
   }
 

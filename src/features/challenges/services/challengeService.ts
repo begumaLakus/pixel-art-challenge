@@ -49,6 +49,7 @@ const mapChallengeDocument = (
     startsAt: data.startsAt,
     endsAt: data.endsAt,
     status: data.status,
+    palette: Array.isArray(data.palette) ? data.palette : undefined,
     winnerSubmissionId: data.winnerSubmissionId ?? null,
     createdAt: data.createdAt,
     completedAt: data.completedAt ?? null,

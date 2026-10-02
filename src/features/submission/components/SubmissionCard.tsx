@@ -1,237 +1,154 @@
-import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { memo, useCallback, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { AppAlert } from '@/src/components/ui/AppAlert';
-import { CyberArcade, Elevation, Radius, Spacing } from '@/constants/theme';
+import { AppText } from '@/src/components/ui/AppText';
+import { Icon } from '@/src/components/ui/Icon';
+import { PixelArt } from '@/src/components/ui/PixelArt';
+import { StickerBox } from '@/src/components/ui/StickerBox';
+import { StickerButton } from '@/src/components/ui/StickerButton';
+import { colors, radius, shadowOffset, spacing, stroke } from '@/src/theme';
 
 import { auth } from '../../auth/services/authServices';
+import { openModerationMenu } from '../../moderation/moderationMenu';
 import { VoteButton } from '../../voting/components/VoteButton';
 import { useLiveVoteCount } from '../../voting/hooks/useVoting';
 import { deleteSubmission } from '../services/submissionService';
+import { JuryNote } from './JuryNote';
+import { TimelapseButton } from './TimelapseButton';
 import type { Submission } from '../types/types';
 
 interface SubmissionCardProps {
   submission: Submission;
-  /**
-   * Bu kart, kullanıcının kendi gönderisi silindiğinde çağrılır —
-   * galeriyi (SubmissionsScreen) yeniden yükleyerek listeden kaldırır.
-   */
+  /** Kartın toplam genişliği (px); galeri ızgarası hesaplar. */
+  width: number;
+  /** Kullanıcının kendi gönderisi silindiğinde galeriyi yeniler. */
   onDeleted?: () => void;
+  /** Çizim şikayet edilince galerinin onu listeden gizlemesi için. */
+  onReported?: () => void;
 }
 
-/**
- * DÜZELTME: Önceki sürümde her piksel sabit 8x8'lik bir View'dı, yani
- * bir 32x32 çizim 256px, bir 16x16 çizim ise 128px genişliğinde
- * render ediliyordu. Galeri ızgarasında (2 sütun) kart genişliği sabit
- * olduğu için 32'lik çizim kartı kendi genişliğini zorlayıp taşıyor,
- * 16'lık çizim ise aynı kart genişliğine göre küçük kalıyordu — yan
- * yana geldiklerinde biri "küçücük" görünüyor, kartların genişliği
- * birbirini tutmadığı için altındaki oy butonları da hizadan kayıyordu.
- *
- * Çözüm: piksel ızgarası artık resolution'dan bağımsız, HER ZAMAN
- * kartın kullanılabilir genişliği kadar bir kare (width: '100%' +
- * aspectRatio: 1) ve her hücre flex:1 ile o karenin eşit bir dilimi.
- * 16x16 ve 32x32 çizimler artık birebir aynı fiziksel boyutta
- * gösteriliyor (32'lik olan daha ince/detaylı pikselli görünür, ki bu
- * doğru ve beklenen davranış), kart genişlikleri de böylece tutarlı
- * kalıp altındaki oy butonu satırını hizalı tutuyor.
- */
-export const SubmissionCard = ({ submission, onDeleted }: SubmissionCardProps) => {
-  const { pixels, resolution } = submission;
-  const [deleting, setDeleting] = useState(false);
+const CARD_PADDING = spacing.sm;
 
-  const isOwnSubmission = auth.currentUser?.uid === submission.userId;
+export const SubmissionCard = memo(
+  ({ submission, width, onDeleted, onReported }: SubmissionCardProps) => {
+    const [deleting, setDeleting] = useState(false);
 
-  // Kart, listeleme sorgusundan gelen `submission.voteCount`'u değil,
-  // Firestore'u canlı dinleyen bu sayıyı gösterir — böylece bu karta ya
-  // da (oy transferi yüzünden) başka bir karta oy verildiğinde/oy geri
-  // alındığında sayı ekrandan çıkıp geri girmeden anında güncellenir.
-  const liveVoteCount = useLiveVoteCount(submission.id, submission.voteCount ?? 0);
+    const isOwnSubmission = auth.currentUser?.uid === submission.userId;
 
-  const handleDeletePress = useCallback(() => {
-    AppAlert.alert(
-      'Çizimi Sil',
-      'Gönderdiğin pixel art silinecek ve bu meydan okumaya yeniden katılabileceksin. Emin misin?',
-      [
-        { text: 'Vazgeç', style: 'cancel' },
-        {
-          text: 'Sil',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setDeleting(true);
-
-              await deleteSubmission(submission.id);
-
-              onDeleted?.();
-            } catch (err) {
-              console.error('Gönderi silinemedi:', err);
-
-              setDeleting(false);
-
-              AppAlert.alert('Hata', 'Çizim silinirken bir hata oluştu.');
-            }
-          },
-        },
-      ],
+    // Listeleme sorgusundaki sayı değil, canlı dinlenen sayı gösterilir;
+    // oy verilince ya da geri alınınca ekrandan çıkmadan güncellenir.
+    const liveVoteCount = useLiveVoteCount(
+      submission.id,
+      submission.voteCount ?? 0,
     );
-  }, [submission.id, onDeleted]);
 
-  return (
-    <View style={styles.card}>
-      <View style={styles.pixelArtFrame}>
-        <View style={styles.pixelArtContainer}>
-          {Array.from({ length: resolution }).map((_, rowIndex) => (
-            <View key={`row-${rowIndex}`} style={styles.pixelRow}>
-              {Array.from({ length: resolution }).map((_, columnIndex) => {
-                const pixelIndex = rowIndex * resolution + columnIndex;
+    const artSize =
+      width - shadowOffset.md - (CARD_PADDING + stroke.base) * 2;
 
-                return (
-                  <View
-                    key={`pixel-${rowIndex}-${columnIndex}`}
-                    style={[
-                      styles.pixel,
-                      { backgroundColor: pixels[pixelIndex] ?? '#FFFFFF' },
-                    ]}
-                  />
-                );
-              })}
-            </View>
-          ))}
+    const handleDeletePress = useCallback(() => {
+      AppAlert.alert(
+        'Çizimi sil',
+        'Gönderdiğin çizim silinecek ve bu challenge’a yeniden katılabileceksin. Emin misin?',
+        [
+          { text: 'Vazgeç', style: 'cancel' },
+          {
+            text: 'Sil',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                setDeleting(true);
+                await deleteSubmission(submission.id);
+                onDeleted?.();
+              } catch (error) {
+                console.error('Gönderi silinemedi:', error);
+                setDeleting(false);
+                AppAlert.alert('Çizim silinemedi', 'Birazdan tekrar dene.');
+              }
+            },
+          },
+        ],
+      );
+    }, [submission.id, onDeleted]);
+
+    return (
+      <StickerBox
+        radius={radius.lg}
+        style={{ width }}
+        contentStyle={styles.card}
+      >
+        <PixelArt
+          pixels={submission.pixels}
+          resolution={submission.resolution}
+          size={artSize}
+          style={styles.art}
+        />
+
+        <View style={styles.infoRow}>
+          <View style={styles.count}>
+            <Icon name="heart" size={14} color={colors.pink} />
+            <AppText variant="pixel">{liveVoteCount} oy</AppText>
+          </View>
+
+          <View style={styles.actions}>
+            <TimelapseButton submission={submission} compact />
+
+            {!isOwnSubmission && (
+              <StickerButton
+                size="sm"
+                variant="white"
+                icon="flag-outline"
+                accessibilityLabel="Çizimi bildir veya kullanıcıyı engelle"
+                onPress={() =>
+                  openModerationMenu({
+                    submission,
+                    onReported: () => onReported?.(),
+                    onBlocked: () => {},
+                  })
+                }
+              />
+            )}
+
+            {isOwnSubmission && (
+              <StickerButton
+                size="sm"
+                variant="white"
+                icon="trash-can-outline"
+                accessibilityLabel="Çizimi sil"
+                loading={deleting}
+                onPress={handleDeletePress}
+              />
+            )}
+          </View>
         </View>
-      </View>
 
-      {isOwnSubmission && (
-        <View style={styles.ownerBadge}>
-          <Text style={styles.ownerBadgeText}>SENİN ÇİZİMİN</Text>
-        </View>
-      )}
-
-      <View style={styles.info}>
-        <Text style={styles.voteCount} numberOfLines={1}>
-          {liveVoteCount} oy
-        </Text>
+        <JuryNote submission={submission} compact />
 
         <VoteButton
           submissionId={submission.id}
           challengeId={submission.challengeId}
           isOwnSubmission={isOwnSubmission}
         />
-      </View>
+      </StickerBox>
+    );
+  },
+);
 
-      {isOwnSubmission && (
-      <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Çizimi sil"
-          onPress={handleDeletePress}
-          disabled={deleting}
-          style={({ pressed }) => [
-            styles.deleteButton,
-            pressed && !deleting && styles.deleteButtonPressed,
-            deleting && styles.deleteButtonDisabled,
-          ]}
-        >
-          {deleting ? (
-            <ActivityIndicator size="small" color={CyberArcade.danger} />
-          ) : (
-            <Text style={styles.deleteButtonText}>🗑 Sil</Text>
-          )}
-        </Pressable>
-      )}
-    </View>
-  );
-};
+SubmissionCard.displayName = 'SubmissionCard';
 
 const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    padding: Spacing.sm + 4,
-    backgroundColor: CyberArcade.surface,
-    borderColor: CyberArcade.border,
-    ...Elevation.card,
+  card: { padding: CARD_PADDING, gap: spacing.sm },
+  art: {
+    borderWidth: stroke.thin,
+    borderColor: colors.ink,
+    borderRadius: radius.sm,
   },
-
-  pixelArtFrame: {
-    width: '100%',
-    borderRadius: Radius.sm + 2,
-    padding: 2,
-    backgroundColor: CyberArcade.surfaceInset,
-    borderWidth: 1,
-    borderColor: CyberArcade.border,
-  },
-
-  // resolution ne olursa olsun (16 ya da 32) HER ZAMAN kartın
-  // genişliği kadar bir kare — tutarlı thumbnail boyutu buradan gelir.
-  pixelArtContainer: {
-    width: '100%',
-    aspectRatio: 1,
-    overflow: 'hidden',
-    borderRadius: Radius.sm,
-  },
-
-  pixelRow: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-
-  pixel: {
-    flex: 1,
-  },
-
-  info: {
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: Spacing.xs + 2,
-    marginTop: Spacing.sm + 4,
+    minHeight: 28,
   },
-
-  voteCount: {
-    flexShrink: 1,
-    color: CyberArcade.textPrimary,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-
-  ownerBadge: {
-    alignSelf: 'flex-start',
-    marginTop: Spacing.xs + 2,
-    paddingHorizontal: Spacing.xs + 2,
-    paddingVertical: 3,
-    borderRadius: Radius.pill,
-    backgroundColor: CyberArcade.mintGlow,
-  },
-
-  ownerBadgeText: {
-    color: CyberArcade.mint,
-    fontSize: 8,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-
-  deleteButton: {
-    marginTop: Spacing.xs + 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.xs + 2,
-    borderRadius: Radius.sm + 1,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 59, 107, 0.4)',
-    backgroundColor: 'rgba(255, 59, 107, 0.08)',
-  },
-
-  deleteButtonPressed: {
-    opacity: 0.7,
-  },
-
-  deleteButtonDisabled: {
-    opacity: 0.5,
-  },
-
-  deleteButtonText: {
-    color: CyberArcade.danger,
-    fontSize: 11,
-    fontWeight: '800',
-  },
+  count: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs + 2 },
+  actions: { flexDirection: 'row', gap: spacing.xs + 2 },
 });
